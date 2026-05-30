@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Fruit {
+  id        String   @id
+  name      String
+  image     String
+  price     Float
+  priceUSD  Float
+  stock     Int
+  rarity    String
+  blurb     String
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  items           String   @default("[]")
+  total           Float
+  totalUSD        Float
+  status          String   @default("pending_payment")
+  paymentMethod   String?
+  paymentId       String?
+  customerName    String
+  customerEmail   String
+  customerRoblox  String
+  customerDiscord String
+  customerNotes   String?
+  receiptUrl      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Conversation {
+  id        String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  unread    Boolean  @default(false)
+  messages  Message[]
+  ticket    Ticket?
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           String
+  type           String       @default("text")
+  content        String
+  audioUrl       String?
+  fileName       String?
+  timestamp      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  conversationId String       @unique
+  status         String       @default("open")
+  userMessage    String
+  botResponse    String
+  createdAt      DateTime     @default(now())
+  resolvedAt     DateTime?
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
