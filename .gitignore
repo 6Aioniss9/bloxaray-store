@@ -18,4 +18,5 @@ prisma/dev.db-journal
 node_modules
 .next/
 .DS_Store
+*.tsbuildinfo
 .vercel
