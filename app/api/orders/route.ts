@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { sanitizeInput, createOrderSchema, expectJson, validateBodySize } from '@/lib/security'
+import { sanitizeInput, createOrderSchema } from '@/lib/security'
 import { rateLimitIP } from '@/lib/rate-limit'
 import { createSecureResponse } from '@/lib/api-security'
 import { sendOrderNotification } from '@/lib/discord-webhook'
 import { requireAdmin } from '@/lib/admin'
+
+function expectJson(request: Request): boolean {
+  return (request.headers.get('content-type') || '').includes('application/json')
+}
+
+function checkBodySize(request: Request, maxBytes: number): NextResponse | null {
+  const cl = request.headers.get('content-length')
+  if (cl && parseInt(cl, 10) > maxBytes) {
+    return NextResponse.json({ error: 'Cuerpo de solicitud demasiado grande' }, { status: 413 })
+  }
+  return null
+}
 
 const POST_RATE = 10, POST_WINDOW = 60000
 const GET_RATE = 60, GET_WINDOW = 60000
@@ -23,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
     }
 
-    const sizeCheck = validateBodySize(request, POST_MAX_BODY)
+    const sizeCheck = checkBodySize(request, POST_MAX_BODY)
     if (sizeCheck) return sizeCheck
 
     const body = await request.json()
@@ -144,7 +156,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
     }
 
-    const sizeCheck = validateBodySize(request, 1024 * 10)
+    const sizeCheck = checkBodySize(request, 1024 * 10)
     if (sizeCheck) return sizeCheck
 
     const body = await request.json()
