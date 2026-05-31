@@ -4,8 +4,7 @@ import { sanitizeInput } from '@/lib/security'
 import { createOrderSchema } from '@/lib/security'
 import { createSafeHandler, createSecureResponse } from '@/lib/api-security'
 import { sendOrderNotification } from '@/lib/discord-webhook'
-
-const validMethods = ['mercadopago', 'yape', 'plin', 'binance']
+import { requireAdmin } from '@/lib/admin'
 
 export const POST = createSafeHandler(async (request: Request) => {
   const body = await request.json()
@@ -23,29 +22,24 @@ export const POST = createSafeHandler(async (request: Request) => {
   const discord = sanitizeInput(customerDiscord)
   const notes = customerNotes ? sanitizeInput(customerNotes) : null
 
-  // Validate against DB
+  // Validate against DB — prices from DB only
   let serverTotal = 0
+  let serverTotalUSD = 0
   for (const item of items) {
     const fruit = await prisma.fruit.findUnique({ where: { id: item.fruitId } })
-    if (!fruit) return NextResponse.json({ error: `Fruta "${item.name}" no encontrada` }, { status: 400 })
+    if (!fruit) return NextResponse.json({ error: `Fruta no encontrada` }, { status: 400 })
     if (fruit.stock < item.quantity) {
-      return NextResponse.json({ error: `Stock insuficiente para "${item.name}"` }, { status: 400 })
-    }
-    if (Math.abs(fruit.price - item.price) > 0.01) {
-      return NextResponse.json({ error: `Precio inválido para "${item.name}"` }, { status: 400 })
+      return NextResponse.json({ error: `Stock insuficiente para "${fruit.name}"` }, { status: 400 })
     }
     serverTotal += fruit.price * item.quantity
-  }
-
-  if (Math.abs(serverTotal - body.total) > 0.01) {
-    return NextResponse.json({ error: 'Total inválido' }, { status: 400 })
+    serverTotalUSD += fruit.priceUSD * item.quantity
   }
 
   const order = await prisma.order.create({
     data: {
       items: JSON.stringify(items),
       total: serverTotal,
-      totalUSD: body.totalUSD || 0,
+      totalUSD: serverTotalUSD,
       status: 'pending_manual_review',
       paymentMethod,
       customerName: name,
@@ -56,7 +50,7 @@ export const POST = createSafeHandler(async (request: Request) => {
     },
   })
 
-  sendOrderNotification(order, 'created')
+  sendOrderNotification(order as any, 'created')
 
   return createSecureResponse({
     success: true,
@@ -76,7 +70,6 @@ export const GET = createSafeHandler(async (request: Request) => {
     const order = await prisma.order.findUnique({ where: { id } })
     if (!order) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 })
 
-    // Strip sensitive fields
     return createSecureResponse({
       id: order.id,
       status: order.status,
@@ -85,6 +78,10 @@ export const GET = createSafeHandler(async (request: Request) => {
       createdAt: order.createdAt,
     })
   }
+
+  // Full list requires admin
+  const guard = await requireAdmin()
+  if (guard instanceof NextResponse) return guard
 
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: 'desc' },
@@ -103,6 +100,9 @@ export const GET = createSafeHandler(async (request: Request) => {
 })
 
 export const PATCH = createSafeHandler(async (request: Request) => {
+  const guard = await requireAdmin()
+  if (guard instanceof NextResponse) return guard
+
   const body = await request.json()
   const { id, status } = body
 

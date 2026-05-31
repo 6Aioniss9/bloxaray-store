@@ -99,10 +99,15 @@ export async function createOrder(input: {
 }
 
 export async function updateOrderStatus(id: string, status: string): Promise<SafeResult<{ success: boolean }>> {
-  return safe(() =>
-    fetchApi('/api/orders', {
+  return safe(() => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (config.adminApiKey) {
+      headers['x-api-key'] = config.adminApiKey
+    }
+    return fetchApi('/api/admin/orders', {
       method: 'PATCH',
-      body: JSON.stringify({ id, status }),
-    }),
-  )
+      headers,
+      body: JSON.stringify({ orderId: id, status }),
+    })
+  })
 }

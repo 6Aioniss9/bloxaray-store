@@ -7,4 +7,5 @@ export const config = {
   staffRoleId: process.env.STAFF_ROLE_ID ?? '',
   ticketCategoryId: process.env.TICKET_CATEGORY_ID ?? '',
   apiBaseUrl: process.env.API_BASE_URL ?? 'http://localhost:3000',
+  adminApiKey: process.env.ADMIN_API_KEY ?? '',
 }

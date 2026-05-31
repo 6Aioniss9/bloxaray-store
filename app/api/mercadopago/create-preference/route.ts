@@ -1,10 +1,37 @@
 import { NextResponse } from 'next/server'
-import { preference } from '@/lib/mercadopago'
+import { MercadoPagoConfig, Preference } from 'mercadopago'
 import { prisma } from '@/lib/prisma'
 import { sanitizeInput } from '@/lib/security'
-import { createPreferenceSchema } from '@/lib/security'
 import { createSafeHandler } from '@/lib/api-security'
 import { sendOrderNotification } from '@/lib/discord-webhook'
+import { z } from 'zod'
+
+const mpClient = new MercadoPagoConfig({
+  accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN!,
+  options: { timeout: 10000 },
+})
+
+const ItemSchema = z.object({
+  fruitId: z.string().min(1).max(100),
+  quantity: z.number().int().min(1).max(99),
+})
+
+const CustomerSchema = z.object({
+  customerName: z.string().min(1).max(100),
+  customerEmail: z.string().email().max(200),
+  customerRoblox: z.string().min(1).max(100),
+  customerDiscord: z.string().min(1).max(100),
+  customerNotes: z.string().max(500).optional(),
+})
+
+const CreatePreferenceSchema = z.object({
+  items: z.array(ItemSchema).min(1).max(20),
+  customerName: z.string().min(1).max(100),
+  customerEmail: z.string().email().max(200),
+  customerRoblox: z.string().min(1).max(100),
+  customerDiscord: z.string().min(1).max(100),
+  customerNotes: z.string().max(500).optional().nullable(),
+})
 
 function getOrigin(request: Request): string {
   return (
@@ -18,8 +45,7 @@ function getOrigin(request: Request): string {
 export const POST = createSafeHandler(async (request: Request) => {
   const body = await request.json()
 
-  // Validate input with Zod
-  const parsed = createPreferenceSchema.safeParse(body)
+  const parsed = CreatePreferenceSchema.safeParse(body)
   if (!parsed.success) {
     const firstError = parsed.error.errors[0]
     return NextResponse.json({ error: firstError?.message || 'Datos inválidos' }, { status: 400 })
@@ -32,16 +58,30 @@ export const POST = createSafeHandler(async (request: Request) => {
   const discord = sanitizeInput(customerDiscord)
   const notes = customerNotes ? sanitizeInput(customerNotes) : null
 
-  // Validate items against real DB data
+  // Fetch all products in one query — prices from DB only
+  const fruitIds = items.map((i) => i.fruitId)
+  const fruits = await prisma.fruit.findMany({
+    where: { id: { in: fruitIds } },
+  })
+
+  if (fruits.length !== fruitIds.length) {
+    return NextResponse.json({ error: 'Una o más frutas no existen en el inventario' }, { status: 400 })
+  }
+
+  const fruitMap = new Map(fruits.map((f) => [f.id, f]))
   let serverTotal = 0
+  let serverTotalUSD = 0
   const validatedItems: { fruitId: string; name: string; price: number; priceUSD: number; quantity: number }[] = []
+
   for (const item of items) {
-    const fruit = await prisma.fruit.findUnique({ where: { id: item.fruitId } })
-    if (!fruit) return NextResponse.json({ error: `"${item.name}" no encontrada en inventario` }, { status: 400 })
+    const fruit = fruitMap.get(item.fruitId)!
     if (fruit.stock < item.quantity) {
-      return NextResponse.json({ error: `Stock insuficiente para "${item.name}". Disponible: ${fruit.stock}` }, { status: 400 })
+      return NextResponse.json({
+        error: `Stock insuficiente para "${fruit.name}". Disponible: ${fruit.stock}`,
+      }, { status: 400 })
     }
     serverTotal += fruit.price * item.quantity
+    serverTotalUSD += fruit.priceUSD * item.quantity
     validatedItems.push({
       fruitId: fruit.id,
       name: fruit.name,
@@ -49,10 +89,6 @@ export const POST = createSafeHandler(async (request: Request) => {
       priceUSD: fruit.priceUSD,
       quantity: item.quantity,
     })
-  }
-
-  if (Math.abs(serverTotal - body.total) > 0.01) {
-    return NextResponse.json({ error: 'Error de validación: el total no coincide' }, { status: 400 })
   }
 
   // Idempotency: check for duplicate pending orders in last 2 min
@@ -79,7 +115,7 @@ export const POST = createSafeHandler(async (request: Request) => {
     data: {
       items: JSON.stringify(validatedItems),
       total: serverTotal,
-      totalUSD: validatedItems.reduce((s, i) => s + i.priceUSD * i.quantity, 0),
+      totalUSD: serverTotalUSD,
       status: 'pending_payment',
       paymentMethod: 'mercadopago',
       customerName: name,
@@ -90,7 +126,6 @@ export const POST = createSafeHandler(async (request: Request) => {
     },
   })
 
-  // 2. Create Mercado Pago preference
   const mpItems = validatedItems.map((item) => ({
     id: item.fruitId,
     title: `${item.name} — Blox Fruit`,
@@ -100,9 +135,12 @@ export const POST = createSafeHandler(async (request: Request) => {
     unit_price: item.price,
   }))
 
-  let result: Awaited<ReturnType<typeof preference.create>>
+  // 2. Create Mercado Pago preference
+  const preferenceAPI = new Preference(mpClient)
+  let result: Awaited<ReturnType<typeof preferenceAPI.create>>
+
   try {
-    result = await preference.create({
+    result = await preferenceAPI.create({
       body: {
         items: mpItems,
         back_urls: {
@@ -117,14 +155,10 @@ export const POST = createSafeHandler(async (request: Request) => {
     })
   } catch (mpError: any) {
     console.error('[MP] Preference creation failed, cleaning up order:', order.id)
-    console.error('[MP] Error:', mpError.message || mpError)
     await prisma.order.delete({ where: { id: order.id } }).catch(() => {})
-    console.error('[MP] Status code: 502')
-    console.error('[MP] Payload enviado:', JSON.stringify(mpItems))
-    console.error('[MP] Error real:', mpError.message || mpError)
-    console.error('[MP] Response:', mpError.cause || mpError.response?.data || 'N/A')
+    console.error('[MP] Error:', mpError.message || mpError)
     return NextResponse.json({
-      error: 'No se pudo crear la preferencia de pago. Revisa consola para más detalles.',
+      error: 'No se pudo crear la preferencia de pago.',
       detail: process.env.NODE_ENV === 'development' ? (mpError.message || 'Error desconocido') : undefined,
     }, { status: 502 })
   }
@@ -132,7 +166,7 @@ export const POST = createSafeHandler(async (request: Request) => {
   const initPoint = result.init_point || result.sandbox_init_point
   if (!initPoint) {
     await prisma.order.delete({ where: { id: order.id } }).catch(() => {})
-    return NextResponse.json({ error: 'Error de configuración de pago. Contacta al soporte.' }, { status: 500 })
+    return NextResponse.json({ error: 'Error de configuración de pago.' }, { status: 500 })
   }
 
   await prisma.order.update({
@@ -140,10 +174,10 @@ export const POST = createSafeHandler(async (request: Request) => {
     data: { paymentId: result.id },
   })
 
-  sendOrderNotification({ ...order, paymentId: result.id }, 'created')
+  sendOrderNotification({ ...order, paymentId: result.id } as any, 'created')
 
   return NextResponse.json({ url: initPoint, orderId: order.id })
 }, {
   rateLimit: { maxRequests: 10, windowMs: 60000 },
-  maxBodySize: 1024 * 10, // 10KB
+  maxBodySize: 1024 * 10,
 })
