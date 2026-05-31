@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 const filters: ('All' | Rarity)[] = [
   'All',
   'Common',
+  'Uncommon',
   'Rare',
   'Legendary',
   'Mythical',

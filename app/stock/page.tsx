@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { type Fruit, type Rarity } from '@/lib/fruits'
 import { FruitCard } from '@/components/site/fruit-card'
 
-const filters: ('Todas' | Rarity)[] = ['Todas', 'Mythical']
+const filters: ('Todas' | Rarity)[] = ['Todas', 'Common', 'Uncommon', 'Rare', 'Legendary', 'Mythical']
 
 export default function StockPage() {
   const [fruits, setFruits] = useState<Fruit[]>([])
