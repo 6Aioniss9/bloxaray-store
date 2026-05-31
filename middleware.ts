@@ -1,19 +1,9 @@
-import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const ADMIN_PATH = '/admin'
-const API_AUTH_PATH = '/api/auth'
-const API_WEBHOOK = '/api/webhook'
-
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
   const response = NextResponse.next()
 
-  // ── Security Headers ──
-  // unsafe-eval removed — framer-motion does NOT need it in production builds.
-  // unsafe-inline for scripts: required by Next.js hydration (inline <script> tags).
-  // unsafe-inline for styles: required by Tailwind JIT in dev.
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
@@ -41,24 +31,6 @@ export async function middleware(request: NextRequest) {
 
   if (process.env.NODE_ENV === 'production') {
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-  }
-
-  // ── Admin route protection via NextAuth ──
-  if (pathname.startsWith(ADMIN_PATH) && !pathname.startsWith(API_AUTH_PATH)) {
-    const session = await auth()
-
-    if (!session?.user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin/login'
-      url.searchParams.set('callbackUrl', pathname)
-      return NextResponse.redirect(url)
-    }
-
-    if (!session.user.isAdmin) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/403'
-      return NextResponse.redirect(url)
-    }
   }
 
   return response
