@@ -2,10 +2,18 @@ import { NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
+import { put } from '@vercel/blob'
 import { rateLimitIP } from '@/lib/rate-limit'
 import { prisma } from '@/lib/prisma'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'receipts')
+
+function extFromType(mime: string): string {
+  if (mime === 'application/pdf') return '.pdf'
+  if (mime === 'image/png') return '.png'
+  if (mime === 'image/webp') return '.webp'
+  return '.jpg'
+}
 
 export async function POST(request: Request) {
   try {
@@ -38,19 +46,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Formato no soportado. Usa PNG, JPG, WebP o PDF' }, { status: 400 })
     }
 
-    // Save file to disk
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true })
-    }
-
-    const ext = file.type === 'application/pdf' ? '.pdf' : file.type === 'image/png' ? '.png' : file.type === 'image/webp' ? '.webp' : '.jpg'
+    const ext = extFromType(file.type)
     const fileName = `${randomUUID()}${ext}`
-    const filePath = path.join(UPLOAD_DIR, fileName)
-
     const bytes = await file.arrayBuffer()
-    fs.writeFileSync(filePath, Buffer.from(bytes))
+    const buffer = Buffer.from(bytes)
 
-    const receiptUrl = `/uploads/receipts/${fileName}`
+    let receiptUrl: string
+
+    if (process.env.NODE_ENV === 'production' && process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`receipts/${fileName}`, buffer, {
+        access: 'public',
+        contentType: file.type,
+      })
+      receiptUrl = blob.url
+    } else {
+      if (!fs.existsSync(UPLOAD_DIR)) {
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+      }
+      const filePath = path.join(UPLOAD_DIR, fileName)
+      fs.writeFileSync(filePath, buffer)
+      receiptUrl = `/uploads/receipts/${fileName}`
+    }
 
     await prisma.order.update({
       where: { id: orderId },
