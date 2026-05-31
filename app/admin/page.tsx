@@ -6,14 +6,46 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import {
   MessageCircle, Check, Search, ArrowLeft, LogOut, Package,
+  ShoppingBag, TrendingUp, AlertTriangle, Apple,
 } from 'lucide-react'
 import { getAllConversations, resolveTicketWithApi, closeTicketWithApi, type Conversation } from '@/lib/chat-store'
+
+type DashboardStats = {
+  totalOrders: number
+  revenue: number
+  pendingOrders: number
+  lowStockFruits: number
+}
 
 export default function AdminPage() {
   const { data: session } = useSession()
   const [convs, setConvs] = useState<Conversation[]>([])
   const [selected, setSelected] = useState<Conversation | null>(null)
   const [search, setSearch] = useState('')
+  const [stats, setStats] = useState<DashboardStats>({ totalOrders: 0, revenue: 0, pendingOrders: 0, lowStockFruits: 0 })
+
+  useEffect(() => {
+    fetch('/api/orders?pageSize=1')
+      .then((r) => r.json())
+      .then((data) => {
+        const orders = Array.isArray(data) ? data : data.orders ?? []
+        setStats({
+          totalOrders: data.total ?? orders.length,
+          revenue: data.revenue ?? 0,
+          pendingOrders: orders.filter((o: any) => o.status === 'pending_payment' || o.status === 'pending_manual_review').length,
+          lowStockFruits: 0,
+        })
+      })
+      .catch(() => {})
+    fetch('/api/admin/fruits')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setStats((s) => ({ ...s, lowStockFruits: data.filter((f: any) => f.stock > 0 && f.stock <= 5).length }))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const refresh = useCallback(async () => {
     const all = await getAllConversations()
@@ -28,7 +60,6 @@ export default function AdminPage() {
     refresh()
   }, [refresh])
 
-  // Polling every 10 seconds
   useEffect(() => {
     const interval = setInterval(refresh, 10000)
     return () => clearInterval(interval)
@@ -74,13 +105,6 @@ export default function AdminPage() {
             <p className="mt-1 text-sm text-zinc-500">Conversaciones y tickets de soporte</p>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/admin/orders"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-[11px] font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
-            >
-              <Package className="size-3" />
-              Pedidos
-            </Link>
             {session?.user && (
               <>
                 <div className="hidden items-center gap-2 sm:flex">
@@ -104,6 +128,48 @@ export default function AdminPage() {
               </>
             )}
           </div>
+        </div>
+
+        {/* Stats */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Link href="/admin/orders" className="rounded-xl border border-white/[0.06] bg-[#0d0d12] p-4 transition-colors hover:border-red-500/30">
+            <div className="flex items-center gap-2">
+              <ShoppingBag className="size-4 text-red-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Pedidos</span>
+            </div>
+            <p className="mt-1.5 text-xl font-bold text-white">{stats.totalOrders}</p>
+          </Link>
+          <div className="rounded-xl border border-white/[0.06] bg-[#0d0d12] p-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="size-4 text-green-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Ingresos</span>
+            </div>
+            <p className="mt-1.5 text-xl font-bold text-white">S/{stats.revenue.toFixed(2)}</p>
+          </div>
+          <Link href="/admin/orders" className="rounded-xl border border-white/[0.06] bg-[#0d0d12] p-4 transition-colors hover:border-red-500/30">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="size-4 text-orange-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Pendientes</span>
+            </div>
+            <p className="mt-1.5 text-xl font-bold text-white">{stats.pendingOrders}</p>
+          </Link>
+          <Link href="/admin/fruits" className="rounded-xl border border-white/[0.06] bg-[#0d0d12] p-4 transition-colors hover:border-red-500/30">
+            <div className="flex items-center gap-2">
+              <Apple className="size-4 text-yellow-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Stock bajo</span>
+            </div>
+            <p className="mt-1.5 text-xl font-bold text-white">{stats.lowStockFruits}</p>
+          </Link>
+        </div>
+
+        {/* Navigation */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Link href="/admin/orders" className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">
+            <Package className="size-3" /> Pedidos
+          </Link>
+          <Link href="/admin/fruits" className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.06] px-3 py-1.5 text-[11px] font-medium text-zinc-400 transition-colors hover:bg-white/5 hover:text-white">
+            <Apple className="size-3" /> Frutas
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

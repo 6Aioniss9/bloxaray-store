@@ -46,6 +46,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [selected, setSelected] = useState<Order | null>(null)
   const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [paymentFilter, setPaymentFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [csrfToken, setCsrfToken] = useState<string | null>(null)
 
@@ -94,6 +96,8 @@ export default function AdminOrdersPage() {
   }
 
   const filtered = orders.filter((o) => {
+    if (statusFilter && o.status !== statusFilter) return false
+    if (paymentFilter && o.paymentMethod !== paymentFilter) return false
     if (!search.trim()) return true
     const q = search.toLowerCase()
     return (
@@ -101,7 +105,8 @@ export default function AdminOrdersPage() {
       o.customerEmail.toLowerCase().includes(q) ||
       o.customerRoblox.toLowerCase().includes(q) ||
       o.customerDiscord.toLowerCase().includes(q) ||
-      o.id.toLowerCase().includes(q)
+      o.id.toLowerCase().includes(q) ||
+      o.paymentId?.toLowerCase().includes(q)
     )
   })
 
@@ -147,6 +152,44 @@ export default function AdminOrdersPage() {
               placeholder="Buscar pedidos..."
               className="h-10 w-56 rounded-xl border border-white/[0.06] bg-black/40 pl-9 pr-3 text-[13px] text-white placeholder:text-zinc-600 outline-none focus:border-red-500/30"
             />
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {['', 'pending_payment', 'paid', 'pending_manual_review', 'delivered', 'cancelled', 'refunded'].map((s) => {
+            const cfg = s ? statusConfig[s] : null
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[10px] font-semibold uppercase transition-all ${
+                  statusFilter === s
+                    ? cfg ? cfg.color : 'border-white/20 text-white bg-white/10'
+                    : 'border-white/[0.06] text-zinc-500 hover:border-white/20 hover:text-zinc-300'
+                }`}
+              >
+                {cfg ? cfg.icon : <Package className="size-3" />}
+                {cfg ? cfg.label : 'Todas'}
+              </button>
+            )
+          })}
+          <div className="ml-auto flex gap-2">
+            {['', 'mercadopago', 'yape', 'plin'].map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPaymentFilter(p)}
+                className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold uppercase transition-all ${
+                  paymentFilter === p
+                    ? 'border-white/20 text-white bg-white/10'
+                    : 'border-white/[0.06] text-zinc-500 hover:border-white/20 hover:text-zinc-300'
+                }`}
+              >
+                {p || 'Todos los pagos'}
+              </button>
+            ))}
           </div>
         </div>
 
