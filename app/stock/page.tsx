@@ -66,9 +66,8 @@ export default function StockPage() {
               Stock en Vivo
             </motion.span>
 
-            <motion.h1 className="mt-3 flex flex-wrap items-center justify-center gap-x-3 font-black uppercase leading-[1.1] md:flex-nowrap" style={{ fontFamily: 'var(--font-heading), sans-serif', textShadow: '0 4px 40px rgba(0,0,0,0.5)', fontSize: 'clamp(1.4rem, 5vw, 3.4rem)', letterSpacing: '0.03em' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}>
-              <span className="text-white">FRUTAS DISPONIBLES</span>
-              <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">EN STOCK</span>
+            <motion.h1 className="mt-3 font-black uppercase leading-[1.15]" style={{ fontFamily: 'var(--font-heading), sans-serif', textShadow: '0 4px 40px rgba(0,0,0,0.5)', fontSize: 'clamp(1.3rem, 5vw, 3.2rem)', letterSpacing: '0.03em' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}>
+              FRUTAS DISPONIBLES <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent whitespace-nowrap">EN STOCK</span>
             </motion.h1>
 
             <motion.p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
