@@ -1,25 +1,46 @@
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto'
 import { NextResponse } from 'next/server'
 
-const CSRF_SECRET = process.env.AUTH_SECRET || 'fallback-dev-only'
+function getCsrfSecret(): string {
+  const secret = process.env.AUTH_SECRET
+  if (!secret || secret.length < 16) {
+    console.error('[CSRF] AUTH_SECRET no está configurado o es muy corto. Los tokens CSRF no son seguros.')
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('AUTH_SECRET es requerido para la seguridad CSRF en producción')
+    }
+    return 'dev-csrf-secret-not-secure'
+  }
+  return secret
+}
+
+const CSRF_MAX_AGE = 2 * 60 * 60 * 1000 // 2 hours
+
+function getSecret(): string {
+  return getCsrfSecret()
+}
 
 export function generateCsrfToken(): string {
+  const secret = getSecret()
   const timestamp = Date.now().toString(36)
   const random = randomBytes(16).toString('hex')
   const payload = `${timestamp}.${random}`
-  const signature = createHmac('sha256', CSRF_SECRET).update(payload).digest('hex').slice(0, 16)
+  const signature = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 16)
   return `${payload}.${signature}`
 }
 
 export function validateCsrfToken(token: string): boolean {
   try {
+    const secret = getSecret()
     const parts = token.split('.')
     if (parts.length !== 3) return false
+
+    const timestamp = parseInt(parts[0], 36)
+    if (Date.now() - timestamp > CSRF_MAX_AGE) return false
 
     const payload = `${parts[0]}.${parts[1]}`
     const signature = parts[2]
 
-    const expectedSig = createHmac('sha256', CSRF_SECRET).update(payload).digest('hex').slice(0, 16)
+    const expectedSig = createHmac('sha256', secret).update(payload).digest('hex').slice(0, 16)
 
     if (signature.length !== expectedSig.length) return false
     return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))
@@ -49,7 +70,16 @@ export function requireCsrf(request: Request): NextResponse | null {
   }
 
   if (!validateCsrfToken(token)) {
-    return NextResponse.json({ error: 'CSRF token inválido' }, { status: 403 })
+    return NextResponse.json({ error: 'CSRF token inválido o expirado' }, { status: 403 })
+  }
+
+  const cookieToken = getCsrfTokenFromRequest(request)
+  if (!cookieToken) {
+    return NextResponse.json({ error: 'Cookie CSRF no encontrada' }, { status: 403 })
+  }
+
+  if (!timingSafeEqual(Buffer.from(token), Buffer.from(cookieToken))) {
+    return NextResponse.json({ error: 'CSRF token no coincide con la cookie' }, { status: 403 })
   }
 
   return null

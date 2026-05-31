@@ -22,12 +22,16 @@ export const POST = createSafeHandler(async (request: Request) => {
   const discord = sanitizeInput(customerDiscord)
   const notes = customerNotes ? sanitizeInput(customerNotes) : null
 
-  // Validate against DB — prices from DB only
+  // Validate against DB — prices from DB only (batch fetch)
+  const fruitIds = [...new Set(items.map((i: any) => i.fruitId))]
+  const dbFruits = await prisma.fruit.findMany({ where: { id: { in: fruitIds } } })
+  const fruitMap = new Map(dbFruits.map((f) => [f.id, f]))
+
   let serverTotal = 0
   let serverTotalUSD = 0
   for (const item of items) {
-    const fruit = await prisma.fruit.findUnique({ where: { id: item.fruitId } })
-    if (!fruit) return NextResponse.json({ error: `Fruta no encontrada` }, { status: 400 })
+    const fruit = fruitMap.get(item.fruitId)
+    if (!fruit) return NextResponse.json({ error: `Fruta no encontrada: ${item.fruitId}` }, { status: 400 })
     if (fruit.stock < item.quantity) {
       return NextResponse.json({ error: `Stock insuficiente para "${fruit.name}"` }, { status: 400 })
     }
@@ -50,7 +54,7 @@ export const POST = createSafeHandler(async (request: Request) => {
     },
   })
 
-  sendOrderNotification(order as any, 'created')
+  sendOrderNotification(order, 'created').catch(() => {})
 
   return createSecureResponse({
     success: true,
@@ -83,18 +87,26 @@ export const GET = createSafeHandler(async (request: Request) => {
   const guard = await requireAdmin()
   if (guard instanceof NextResponse) return guard
 
-  const orders = await prisma.order.findMany({
-    orderBy: { createdAt: 'desc' },
-    select: {
-      id: true, items: true, total: true, totalUSD: true,
-      status: true, paymentMethod: true, paymentId: true,
-      customerName: true, customerEmail: true,
-      customerRoblox: true, customerDiscord: true,
-      customerNotes: true, receiptUrl: true, createdAt: true,
-    },
-  })
+  const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
+  const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') ?? '50', 10)))
 
-  return createSecureResponse(orders)
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id: true, items: true, total: true, totalUSD: true,
+        status: true, paymentMethod: true, paymentId: true,
+        customerName: true, customerEmail: true,
+        customerRoblox: true, customerDiscord: true,
+        customerNotes: true, receiptUrl: true, createdAt: true,
+      },
+    }),
+    prisma.order.count(),
+  ])
+
+  return createSecureResponse({ orders, total, page, pageSize })
 }, {
   rateLimit: { maxRequests: 60, windowMs: 60000 },
 })

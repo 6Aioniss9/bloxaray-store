@@ -10,6 +10,10 @@ __v0_jsx-dev-runtime.ts
 .env*.local
 .env
 
+# Uploads
+public/uploads/receipts/*
+!public/uploads/receipts/.gitkeep
+
 # Database
 prisma/dev.db
 prisma/dev.db-journal

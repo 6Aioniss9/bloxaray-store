@@ -13,10 +13,17 @@ type ApiOptions = {
   requireCsrf?: boolean
 }
 
+function checkBodySize(request: Request, maxBytes: number): NextResponse | null {
+  const cl = request.headers.get('content-length')
+  if (cl && parseInt(cl, 10) > maxBytes) {
+    return NextResponse.json({ error: 'Cuerpo de solicitud demasiado grande' }, { status: 413 })
+  }
+  return null
+}
+
 export function createSafeHandler(handler: ApiHandler, options: ApiOptions = {}): ApiHandler {
-  return async (request: Request, params?: any) => {
+  return async (request: Request, params?: unknown) => {
     try {
-      // Rate limiting
       const rateLimitOpts = options.rateLimit
       if (rateLimitOpts !== false) {
         const rl = rateLimitOpts || {}
@@ -32,25 +39,15 @@ export function createSafeHandler(handler: ApiHandler, options: ApiOptions = {})
         }
       }
 
-      // Content-Type enforcement for POST/PUT/PATCH
       if (options.requireJson !== false && request.method !== 'GET' && request.method !== 'DELETE') {
         if (!expectJson(request)) {
           return NextResponse.json({ error: 'Content-Type debe ser application/json' }, { status: 415 })
         }
       }
 
-      // Body size limit
-      const contentType = request.headers.get('content-type') || ''
-      if (options.maxBodySize !== undefined && request.method !== 'GET' && !contentType.includes('multipart')) {
-        try {
-          const clone = request.clone()
-          const text = await clone.text()
-          if (!validateBodySize(text, options.maxBodySize)) {
-            return NextResponse.json({ error: 'Cuerpo de solicitud demasiado grande' }, { status: 413 })
-          }
-        } catch {
-          // body already consumed
-        }
+      if (options.maxBodySize !== undefined && request.method !== 'GET') {
+        const sizeCheck = checkBodySize(request, options.maxBodySize)
+        if (sizeCheck) return sizeCheck
       }
 
       if (options.requireCsrf && request.method !== 'GET') {
@@ -59,14 +56,13 @@ export function createSafeHandler(handler: ApiHandler, options: ApiOptions = {})
       }
 
       return handler(request, params)
-    } catch (error: any) {
-      console.error('[API] Error no manejado:', error?.message || error)
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : 'Error desconocido'
+      if (!isProduction()) {
+        console.error('[API] Error no manejado:', errMsg)
+      }
 
-      const msg = isProduction()
-        ? 'Error interno del servidor'
-        : error?.message || 'Error desconocido'
-
-      return NextResponse.json({ error: msg }, { status: 500 })
+      return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
     }
   }
 }

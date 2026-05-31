@@ -214,7 +214,7 @@ export default function AdminPage() {
                       <a
                         href="https://discord.gg/aioniss"
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noreferrer noopener"
                         className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/25 px-3 py-1.5 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/10"
                       >
                         <MessageCircle className="size-3" />

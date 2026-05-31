@@ -8,6 +8,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, ShoppingCart, Loader2, Check, CreditCard, Smartphone, Wallet, Send, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCart, clearCart, getCartTotal, type CartItem } from '@/lib/cart-store'
+import { getManualPaymentInfo } from '@/lib/payment-methods'
 
 type PaymentMethod = 'mercadopago' | 'yape' | 'plin' | 'binance'
 
@@ -37,40 +38,6 @@ const paymentMethods: { id: PaymentMethod; label: string; icon: React.ReactNode;
     description: 'Pago con cripto vía Binance',
   },
 ]
-
-const manualPaymentInfo: Partial<Record<PaymentMethod, { number: string; name: string; instructions: string[] }>> = {
-  yape: {
-    number: '999 888 777',
-    name: 'Leonardo A.',
-    instructions: [
-      'Abre Yape y busca el número 999 888 777',
-      'Envía el monto exacto del pedido',
-      'Captura la pantalla de confirmación',
-      'Sube el comprobante abajo',
-    ],
-  },
-  plin: {
-    number: '999 888 777',
-    name: 'Leonardo A.',
-    instructions: [
-      'Abre Plin y busca el número 999 888 777',
-      'Envía el monto exacto del pedido',
-      'Captura la pantalla de confirmación',
-      'Sube el comprobante abajo',
-    ],
-  },
-  binance: {
-    number: 'ID: 123456789',
-    name: 'Leonardo A.',
-    instructions: [
-      'Abre Binance y ve a P2P / Enviar',
-      'Busca el ID: 123456789',
-      'Envía el monto exacto del pedido en USDT',
-      'Captura la pantalla de confirmación',
-      'Sube el comprobante abajo',
-    ],
-  },
-}
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -235,7 +202,7 @@ export default function CheckoutPage() {
             <a
               href="https://discord.gg/aioniss"
               target="_blank"
-              rel="noreferrer"
+               rel="noreferrer noopener"
               className="rounded-xl border border-white/10 py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5"
             >
               Ir a Discord
@@ -358,7 +325,8 @@ export default function CheckoutPage() {
 
               {/* Manual payment instructions */}
               {paymentMethod !== 'mercadopago' && (() => {
-                const info = manualPaymentInfo[paymentMethod]!
+                const info = getManualPaymentInfo(paymentMethod)
+                if (!info) return null
                 return (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}

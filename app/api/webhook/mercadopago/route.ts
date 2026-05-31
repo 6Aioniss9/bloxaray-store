@@ -3,13 +3,14 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendOrderNotification } from '@/lib/discord-webhook'
 import { webhookRateLimit } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 const MP_WEBHOOK_SECRET = process.env.MERCADO_PAGO_WEBHOOK_SECRET
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN
 
 function verifyMPSignature(request: NextRequest, dataId: string): boolean {
   if (!MP_WEBHOOK_SECRET) {
-    console.error('[WEBHOOK] MERCADO_PAGO_WEBHOOK_SECRET not set — rejecting all webhooks')
+    logger.error('WEBHOOK', 'MERCADO_PAGO_WEBHOOK_SECRET not set — rejecting all webhooks')
     return false
   }
 
@@ -17,7 +18,7 @@ function verifyMPSignature(request: NextRequest, dataId: string): boolean {
   const xRequestId = request.headers.get('x-request-id')
 
   if (!xSignature || !xRequestId) {
-    console.warn('[WEBHOOK] Missing x-signature or x-request-id headers')
+    logger.warn('WEBHOOK', 'Missing x-signature or x-request-id headers')
     return false
   }
 
@@ -28,14 +29,14 @@ function verifyMPSignature(request: NextRequest, dataId: string): boolean {
   const v1 = parts['v1']
 
   if (!ts || !v1) {
-    console.warn('[WEBHOOK] Malformed x-signature header')
+    logger.warn('WEBHOOK', 'Malformed x-signature header')
     return false
   }
 
   const tsNum = parseInt(ts, 10)
   const now = Math.floor(Date.now() / 1000)
   if (Math.abs(now - tsNum) > 300) {
-    console.warn('[WEBHOOK] Webhook timestamp too old — possible replay attack')
+    logger.warn('WEBHOOK', 'Webhook timestamp too old — possible replay attack')
     return false
   }
 
@@ -90,7 +91,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verifyMPSignature(request, dataId)) {
-      console.error('[WEBHOOK] Invalid signature — request rejected')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -102,12 +102,12 @@ export async function POST(request: NextRequest) {
     const currency = payment?.currency_id as string | undefined
 
     if (!externalRef) {
-      console.warn('[WEBHOOK] Payment has no external_reference', { dataId })
+      logger.warn('WEBHOOK', 'Payment has no external_reference', { dataId })
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
     if (currency && currency !== 'PEN') {
-      console.error('[WEBHOOK] Unexpected currency:', currency)
+      logger.error('WEBHOOK', 'Unexpected currency', { currency })
       return NextResponse.json({ error: 'Invalid currency' }, { status: 400 })
     }
 
@@ -116,12 +116,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (!order) {
-      console.warn('[WEBHOOK] Order not found:', externalRef)
+      logger.warn('WEBHOOK', 'Order not found', { externalRef })
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
     if (order.mpPaymentId && order.mpPaymentId !== dataId) {
-      console.warn('[WEBHOOK] Order already linked to different payment:', order.mpPaymentId)
+      logger.warn('WEBHOOK', 'Order already linked to different payment', { mpPaymentId: order.mpPaymentId })
       return NextResponse.json({ received: true }, { status: 200 })
     }
 
@@ -130,11 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (amount !== undefined && Math.abs(amount - order.total) > 0.01) {
-      console.error('[WEBHOOK] Amount mismatch — possible fraud', {
-        expected: order.total,
-        received: amount,
-        orderId: externalRef,
-      })
+      logger.warn('WEBHOOK', 'Amount mismatch — possible fraud', { expected: order.total, received: amount, orderId: externalRef })
       await prisma.order.update({
         where: { id: externalRef },
         data: { status: 'pending_manual_review', mpPaymentId: dataId },
@@ -159,13 +155,17 @@ export async function POST(request: NextRequest) {
         newStatus = 'pending_payment'
         break
       default:
-        console.warn('[WEBHOOK] Unknown MP status:', status)
+        logger.warn('WEBHOOK', 'Unknown MP status', { status })
     }
 
     if (newStatus === 'paid' && order.status !== 'paid') {
       const items = JSON.parse(order.items) as { fruitId: string; quantity: number }[]
+      const fruitIds = [...new Set(items.map((i) => i.fruitId))]
+      const dbFruits = await prisma.fruit.findMany({ where: { id: { in: fruitIds } } })
+      const fruitMap = new Map(dbFruits.map((f) => [f.id, f]))
+
       for (const item of items) {
-        const fruit = await prisma.fruit.findUnique({ where: { id: item.fruitId } })
+        const fruit = fruitMap.get(item.fruitId)
         if (fruit && fruit.stock >= item.quantity) {
           await prisma.fruit.update({
             where: { id: item.fruitId },
@@ -185,12 +185,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    console.info('[WEBHOOK] Order updated', { orderId: externalRef, status: newStatus })
-    sendOrderNotification(updated as any, newStatus === 'paid' ? 'paid' : 'updated')
+    sendOrderNotification(updated, newStatus === 'paid' ? 'paid' : 'updated').catch(() => {})
 
     return NextResponse.json({ received: true }, { status: 200 })
   } catch (error) {
-    console.error('[WEBHOOK] Unhandled error:', error instanceof Error ? error.message : 'unknown')
+    const msg = error instanceof Error ? error.message : 'unknown'
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

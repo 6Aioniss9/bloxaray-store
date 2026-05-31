@@ -29,6 +29,10 @@ type OrderItem = {
   quantity: number
 }
 
+function isValidReceiptUrl(url: string): boolean {
+  return url.startsWith('/uploads/receipts/') || url.startsWith('data:image/')
+}
+
 const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
   pending_payment: { label: 'Pendiente de pago', color: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10', icon: <Clock className="size-3" /> },
   paid: { label: 'Pagado', color: 'text-green-400 border-green-500/30 bg-green-500/10', icon: <CheckCircle className="size-3" /> },
@@ -54,11 +58,11 @@ export default function AdminOrdersPage() {
 
   const refresh = useCallback(async () => {
     try {
-      const res = await fetch('/api/orders')
+      const res = await fetch('/api/orders?pageSize=200')
       const data = await res.json()
-      setOrders(data)
+      setOrders(Array.isArray(data) ? data : data.orders ?? [])
     } catch {
-      console.error('Error fetching orders')
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -280,13 +284,13 @@ export default function AdminOrdersPage() {
                     </div>
 
                     {/* Receipt */}
-                    {selected.receiptUrl && (
+                    {selected.receiptUrl && isValidReceiptUrl(selected.receiptUrl) && (
                       <div className="mb-5">
                         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Comprobante</p>
                         <div className="rounded-xl border border-white/[0.04] bg-white/[0.02] p-3">
                           <img
                             src={selected.receiptUrl}
-                            alt="Comprobante"
+                            alt="Comprobante de pago"
                             className="max-h-48 rounded-lg object-contain cursor-pointer"
                             onClick={() => window.open(selected.receiptUrl!, '_blank')}
                           />

@@ -49,7 +49,7 @@ export const createPreferenceSchema = z.object({
   customerRoblox: robloxSchema,
   customerDiscord: discordSchema,
   customerNotes: notesSchema,
-  paymentMethod: z.string().optional(),
+  paymentMethod: z.enum(['mercadopago', 'yape', 'plin', 'binance']).optional(),
 })
 
 export const createOrderSchema = z.object({

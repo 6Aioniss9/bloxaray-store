@@ -31,4 +31,7 @@ client.on('interactionCreate', async (interaction) => {
   }
 })
 
-client.login(process.env.DISCORD_BOT_TOKEN!)
+client.login(process.env.DISCORD_BOT_TOKEN!).catch((err) => {
+  console.error('Error al conectar keep-alive:', err)
+  process.exit(1)
+})

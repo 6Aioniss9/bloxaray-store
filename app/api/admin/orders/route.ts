@@ -50,11 +50,15 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: 'Demasiadas solicitudes.' }, { status: 429 })
   }
 
-  const csrfResult = requireCsrf(request)
-  if (csrfResult) return csrfResult
-
   const guard = await requireAdmin(request)
   if (guard instanceof NextResponse) return guard
+
+  // CSRF required only for session-based requests (not API key)
+  const usesApiKey = !!(request.headers.get('x-api-key'))
+  if (!usesApiKey) {
+    const csrfResult = requireCsrf(request)
+    if (csrfResult) return csrfResult
+  }
 
   try {
     let body: unknown

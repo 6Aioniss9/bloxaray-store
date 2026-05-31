@@ -19,7 +19,6 @@ export async function requireAdmin(request?: Request) {
   }
 
   if (!session.user.isAdmin) {
-    console.warn('[ADMIN] Access denied for user:', (session.user as any).discordId ?? 'unknown')
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 

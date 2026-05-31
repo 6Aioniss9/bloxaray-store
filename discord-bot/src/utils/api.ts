@@ -76,7 +76,14 @@ export async function getReviews(): Promise<SafeResult<Review[]>> {
 }
 
 export async function getOrders(): Promise<SafeResult<Order[]>> {
-  return safe(() => fetchApi<Order[]>('/api/orders'))
+  return safe(async () => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (config.adminApiKey) {
+      headers['x-api-key'] = config.adminApiKey
+    }
+    const res = await fetchApi<{ orders: Order[] }>('/api/admin/orders', { headers })
+    return res.orders
+  })
 }
 
 export async function createOrder(input: {

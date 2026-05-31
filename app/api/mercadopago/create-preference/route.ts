@@ -174,7 +174,7 @@ export const POST = createSafeHandler(async (request: Request) => {
     data: { paymentId: result.id },
   })
 
-  sendOrderNotification({ ...order, paymentId: result.id } as any, 'created')
+  sendOrderNotification({ ...order, paymentId: result.id }, 'created').catch(() => {})
 
   return NextResponse.json({ url: initPoint, orderId: order.id })
 }, {

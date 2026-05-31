@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { supportRateLimit } from '@/lib/rate-limit'
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const rateLimited = supportRateLimit(request)
+  if (rateLimited) return rateLimited
+
   const { id } = await params
   try {
     const conv = await prisma.conversation.findUnique({
