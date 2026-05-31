@@ -1,16 +1,25 @@
-import DOMPurify from 'isomorphic-dompurify'
 import { z } from 'zod'
 
-// ── Sanitization ──
+const ESCAPE_HTML = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;')
+
+const ALLOWED_TAGS = new Set(['b', 'i', 'em', 'strong', 'a'])
+const ALLOWED_ATTR = new Set(['href'])
 
 export function sanitizeInput(input: string): string {
-  return DOMPurify.sanitize(input.trim(), { ALLOWED_TAGS: [] })
+  return input.trim().replace(/<[^>]*>/g, '')
 }
 
 export function sanitizeMessage(input: string): string {
-  return DOMPurify.sanitize(input.trim(), {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a'],
-    ALLOWED_ATTR: ['href'],
+  return input.trim().replace(/<(\/?)(\w+)([^>]*)>/g, (_m, close, tag, attrs) => {
+    if (!ALLOWED_TAGS.has(tag.toLowerCase())) return ESCAPE_HTML(_m)
+    const safe = `<${close}${tag}`
+    if (!close && tag.toLowerCase() === 'a') {
+      const href = attrs.match(/href\s*=\s*"([^"]+)"/i)
+      if (href) return `${safe} href="${ESCAPE_HTML(href[1])}">`
+    }
+    if (close || !attrs.trim()) return `${safe}>`
+    return ESCAPE_HTML(_m)
   })
 }
 
