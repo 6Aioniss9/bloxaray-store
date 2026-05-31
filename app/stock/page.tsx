@@ -2,18 +2,27 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, PackageSearch, Sparkles } from 'lucide-react'
+import { Search, PackageSearch } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { type Fruit, type Rarity } from '@/lib/fruits'
 import { FruitCard } from '@/components/site/fruit-card'
 
-const filters: ('Todas' | Rarity)[] = ['Todas', 'Common', 'Uncommon', 'Rare', 'Legendary', 'Mythical']
+type Filter = 'Todas' | Rarity
+const filters: Filter[] = ['Todas', 'Common', 'Uncommon', 'Rare', 'Legendary', 'Mythical']
+
+const FILTER_COLORS: Record<Filter, { activeBorder: string; activeBg: string; activeText: string; activeShadow: string; defaultBorder: string; defaultHoverBorder: string }> = {
+  Todas:      { activeBorder: 'border-zinc-400/50', activeBg: 'bg-zinc-500/15', activeText: 'text-zinc-300', activeShadow: 'rgba(161,161,170,0.25)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-zinc-500/30' },
+  Common:     { activeBorder: 'border-zinc-500/50', activeBg: 'bg-zinc-500/15', activeText: 'text-zinc-300', activeShadow: 'rgba(113,113,122,0.3)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-zinc-500/30' },
+  Uncommon:   { activeBorder: 'border-cyan-500/50', activeBg: 'bg-cyan-500/15', activeText: 'text-cyan-300', activeShadow: 'rgba(6,182,212,0.3)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-cyan-500/30' },
+  Rare:       { activeBorder: 'border-purple-500/50', activeBg: 'bg-purple-500/15', activeText: 'text-purple-300', activeShadow: 'rgba(168,85,247,0.3)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-purple-500/30' },
+  Legendary:  { activeBorder: 'border-fuchsia-500/50', activeBg: 'bg-fuchsia-500/15', activeText: 'text-fuchsia-300', activeShadow: 'rgba(217,70,239,0.3)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-fuchsia-500/30' },
+  Mythical:   { activeBorder: 'border-red-500/50', activeBg: 'bg-red-500/15', activeText: 'text-red-300', activeShadow: 'rgba(239,35,60,0.35)', defaultBorder: 'border-white/[0.07]', defaultHoverBorder: 'border-red-500/30' },
+}
 
 export default function StockPage() {
   const [fruits, setFruits] = useState<Fruit[]>([])
   const [query, setQuery] = useState('')
-  const [active, setActive] = useState<'Todas' | Rarity>('Todas')
-  const [focused, setFocused] = useState(false)
+  const [active, setActive] = useState<Filter>('Todas')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -37,70 +46,84 @@ export default function StockPage() {
       <div className="pointer-events-none fixed inset-0 -z-20">
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: "url('/backgrounds/pueblo.png')", backgroundAttachment: 'fixed' }} />
         <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-red-950/10 via-transparent to-red-950/10" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#050510] via-[#050510]/80 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050510] via-[#050510]/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-red-950/15 via-transparent to-red-950/10" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#050510] via-[#050510]/80 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#050510] via-[#050510]/80 to-transparent" />
       </div>
 
-      <section className="relative overflow-hidden pb-6 sm:pb-10">
-        <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+      <section className="relative pb-10 sm:pb-14">
+        <div className="mx-auto max-w-5xl px-4 pt-8 sm:px-6 lg:px-8">
           <div className="pointer-events-none absolute left-1/2 top-1/3 -z-10 -translate-x-1/2 -translate-y-1/2">
-            <div className="size-[500px] rounded-full bg-black/40 blur-[100px] sm:size-[700px]" />
+            <div className="size-[400px] rounded-full bg-black/30 blur-[80px] sm:size-[500px]" />
           </div>
           <div className="pointer-events-none absolute left-1/2 top-0 -z-10 -translate-x-1/2">
-            <div className="size-[600px] rounded-full blur-3xl sm:size-[700px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.08) 0%, transparent 70%)' }} />
+            <div className="size-[500px] rounded-full blur-3xl sm:size-[600px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.06) 0%, transparent 70%)' }} />
           </div>
 
-          <motion.div className="mx-auto w-full max-w-6xl text-center" initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-            <motion.span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-red-400 shadow-[0_0_20px_-8px_rgba(239,35,60,0.3)] backdrop-blur-sm" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
-              <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_6px_2px_rgba(239,35,60,0.5)]" />
+          <motion.div className="text-center" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
+            <motion.span className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/8 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-400 shadow-[0_0_16px_-8px_rgba(239,35,60,0.25)] backdrop-blur-sm" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}>
+              <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_6px_2px_rgba(239,35,60,0.4)]" />
               Stock en Vivo
             </motion.span>
 
-            <motion.h1 className="mt-4 flex flex-wrap items-center justify-center gap-x-4 font-black uppercase leading-[1.15] md:flex-nowrap" style={{ fontFamily: 'var(--font-heading), sans-serif', textShadow: '0 4px 48px rgba(0,0,0,0.6), 0 0 60px rgba(239,35,60,0.08)', fontSize: 'clamp(1.5rem, 5vw, 3.8rem)', letterSpacing: '0.03em' }} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15 }}>
-              <span className="md:whitespace-nowrap"><span className="text-white">FRUTAS DISPONIBLES</span></span>
-              <span className="md:whitespace-nowrap"><span className="text-white">EN </span><span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">STOCK</span></span>
+            <motion.h1 className="mt-3 flex flex-wrap items-center justify-center gap-x-3 font-black uppercase leading-[1.1] md:flex-nowrap" style={{ fontFamily: 'var(--font-heading), sans-serif', textShadow: '0 4px 40px rgba(0,0,0,0.5)', fontSize: 'clamp(1.4rem, 5vw, 3.4rem)', letterSpacing: '0.03em' }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.12 }}>
+              <span className="text-white">FRUTAS DISPONIBLES</span>
+              <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">EN STOCK</span>
             </motion.h1>
 
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
-              <p className="mx-auto mt-4 text-[15px] leading-relaxed text-zinc-300 sm:whitespace-nowrap sm:text-base">Elige tu fruta, revisa el stock actualizado y compra directo por Discord.</p>
-            </motion.div>
+            <motion.p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+              Elige tu fruta, revisa el stock actualizado y compra directo por Discord.
+            </motion.p>
           </motion.div>
 
-          <motion.div className="mt-5 flex items-center justify-center" initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }} transition={{ duration: 0.7, delay: 0.35, ease: [0.22, 1, 0.36, 1] }} style={{ originX: 0.5 }}>
-            <div className="flex w-2/5 items-center gap-3 sm:gap-4">
-              <div className="h-[1.5px] flex-1 bg-gradient-to-r from-transparent via-red-400/50 to-red-500/30" />
-              <div className="size-2 rotate-45 bg-red-400 shadow-[0_0_12px_rgba(239,35,60,0.6)] sm:size-2.5" />
-              <div className="h-[1.5px] flex-1 bg-gradient-to-r from-red-500/30 via-red-400/50 to-transparent" />
-            </div>
-          </motion.div>
-
-          <motion.div className="mx-auto mt-8 max-w-2xl sm:mt-10" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.35 }}>
-            <div className="rounded-2xl border border-white/[0.06] bg-black/50 backdrop-blur-xl sm:rounded-3xl sm:p-6 sm:border-red-500/5 sm:shadow-[0_0_40px_-16px_rgba(239,35,60,0.12)]">
-              <div className="p-4 sm:p-0">
-                <div className="relative group">
-                  <div className="relative flex items-center rounded-xl border border-white/[0.07] bg-black/60 backdrop-blur-sm transition-all duration-300 focus-within:border-red-500/40 focus-within:shadow-[0_0_30px_-10px_rgba(239,35,60,0.3)] sm:rounded-2xl">
-                    <Search className="pointer-events-none absolute left-4 size-4 text-zinc-500 transition-colors duration-300 group-focus-within:text-red-400" />
-                    <Input value={query} onChange={(e) => setQuery(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="Busca tu fruta..." className="h-13 border-0 bg-transparent pl-12 pr-4 text-[15px] text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:outline-none sm:h-14 sm:pl-13 sm:text-base" aria-label="Buscar frutas" />
+          <motion.div className="mx-auto mt-6 max-w-2xl sm:mt-8" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
+            <div className="rounded-2xl border border-white/[0.06] bg-black/40 backdrop-blur-xl sm:rounded-2xl sm:border-white/[0.05] sm:shadow-[0_0_40px_-20px_rgba(0,0,0,0.5)]">
+              <div className="px-4 py-4 sm:px-6 sm:py-5">
+                <div className="relative">
+                  <div className="relative flex items-center rounded-xl border border-white/[0.06] bg-black/50 backdrop-blur-sm transition-all duration-300 focus-within:border-red-500/30 focus-within:shadow-[0_0_24px_-10px_rgba(239,35,60,0.2)]">
+                    <Search className="pointer-events-none absolute left-3.5 size-4 text-zinc-500 transition-colors duration-300 peer-focus-within:text-red-400" />
+                    <Input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Busca tu fruta..."
+                      className="peer h-11 border-0 bg-transparent pl-10 pr-3 text-sm text-white placeholder:text-zinc-500 focus-visible:ring-0 focus-visible:outline-none sm:h-12 sm:pl-11 sm:text-[15px]"
+                      aria-label="Buscar frutas"
+                    />
                     {query && (
-                      <button onClick={() => setQuery('')} className="mr-2 flex size-6 items-center justify-center rounded-full bg-white/10 text-xs text-zinc-400 transition-colors hover:bg-white/20 hover:text-white">✕</button>
+                      <button onClick={() => setQuery('')} className="mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white/8 text-[11px] text-zinc-500 transition-colors hover:bg-white/15 hover:text-zinc-300">✕</button>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-center gap-3 pb-1">
-                  {filters.map((f, i) => (
-                    <motion.button key={f} type="button" onClick={() => setActive(f)} className="relative rounded-full px-6 py-2.5 text-sm font-semibold uppercase tracking-wider transition-all" whileTap={{ scale: 0.95 }} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.45 + i * 0.1 }}>
-                      {active === f ? (
-                        <motion.div layoutId="filter-bg" className="absolute inset-0 rounded-full border border-red-500/40 bg-red-500/15 shadow-[0_0_20px_-8px_rgba(239,35,60,0.3)]" transition={{ type: 'spring', stiffness: 300, damping: 25 }} />
-                      ) : (
-                        <div className="absolute inset-0 rounded-full border border-white/[0.07] bg-black/40 transition-colors duration-300 hover:border-red-500/20 hover:bg-red-500/5" />
-                      )}
-                      <span className={`relative z-10 flex items-center gap-1.5 ${active === f ? 'text-red-400' : 'text-zinc-400'}`}>
-                        {f === 'Mythical' && <Sparkles className="size-3.5" />}{f}
-                      </span>
-                    </motion.button>
-                  ))}
+                <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 sm:mt-4 sm:gap-2.5">
+                  {filters.map((f, i) => {
+                    const c = FILTER_COLORS[f]
+                    const isActive = active === f
+                    return (
+                      <motion.button
+                        key={f}
+                        type="button"
+                        onClick={() => setActive(f)}
+                        className="relative h-9 rounded-full px-4 text-[11px] font-semibold uppercase tracking-[0.12em] transition-all duration-200 sm:h-10 sm:px-5 sm:text-xs"
+                        whileTap={{ scale: 0.96 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.35, delay: 0.35 + i * 0.06 }}
+                      >
+                        {isActive ? (
+                          <motion.div
+                            layoutId="filter-bg"
+                            className={`absolute inset-0 rounded-full border ${c.activeBorder} ${c.activeBg}`}
+                            style={{ boxShadow: `0 0 18px -6px ${c.activeShadow}` }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                          />
+                        ) : (
+                          <div className={`absolute inset-0 rounded-full border ${c.defaultBorder} bg-black/30 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.04]`} />
+                        )}
+                        <span className={`relative z-10 ${isActive ? c.activeText : 'text-zinc-400'}`}>{f}</span>
+                      </motion.button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
