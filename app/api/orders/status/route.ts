@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { payment as mpPayment } from '@/lib/mercadopago'
+import { getPayment } from '@/lib/mercadopago'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const pid = paymentId || order.paymentId
     if (pid) {
       try {
-        const pago = await mpPayment.get({ id: pid })
+        const pago = await getPayment().get({ id: pid })
         mpStatus = pago.status ?? null
 
         // Auto-recover: if MP says approved but DB says pending

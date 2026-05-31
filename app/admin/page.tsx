@@ -25,23 +25,25 @@ export default function AdminPage() {
   const [stats, setStats] = useState<DashboardStats>({ totalOrders: 0, revenue: 0, pendingOrders: 0, lowStockFruits: 0 })
 
   useEffect(() => {
-    fetch('/api/orders?pageSize=1')
+    fetch('/api/admin/orders?pageSize=200')
       .then((r) => r.json())
       .then((data) => {
-        const orders = Array.isArray(data) ? data : data.orders ?? []
-        setStats({
+        const orders = data.orders ?? []
+        const paidOrders = orders.filter((o: any) => o.status === 'paid' || o.status === 'delivered')
+        const revenue = paidOrders.reduce((sum: number, o: any) => sum + (o.total || 0), 0)
+        setStats((s) => ({
+          ...s,
           totalOrders: data.total ?? orders.length,
-          revenue: data.revenue ?? 0,
+          revenue,
           pendingOrders: orders.filter((o: any) => o.status === 'pending_payment' || o.status === 'pending_manual_review').length,
-          lowStockFruits: 0,
-        })
+        }))
       })
       .catch(() => {})
     fetch('/api/admin/fruits')
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          setStats((s) => ({ ...s, lowStockFruits: data.filter((f: any) => f.stock > 0 && f.stock <= 5).length }))
+          setStats((s) => ({ ...s, lowStockFruits: data.filter((f: any) => f.stock <= 5).length }))
         }
       })
       .catch(() => {})

@@ -88,11 +88,18 @@ function SuccessView({ order }: { order: OrderData }) {
 }
 
 function InfoPage() {
+  const yapeNum = process.env.NEXT_PUBLIC_YAPE_NUMBER || '951 118 020'
+  const yapeName = process.env.NEXT_PUBLIC_YAPE_NAME || 'BLOXARAY'
+  const plinNum = process.env.NEXT_PUBLIC_PLIN_NUMBER || '951 118 020'
+  const plinName = process.env.NEXT_PUBLIC_PLIN_NAME || 'BLOXARAY'
+  const binanceNum = process.env.NEXT_PUBLIC_BINANCE_ID || '123456789'
+  const binanceName = process.env.NEXT_PUBLIC_BINANCE_NAME || 'BLOXARAY'
+
   const methods = [
-    { name: 'Binance', desc: 'Paga con crypto (USDT) directamente desde tu billetera Binance.', icon: Bitcoin, tone: 'text-orange-400' },
-    { name: 'Yape', desc: 'Pagos móviles rápidos para compradores en Perú.', icon: Smartphone, tone: 'text-red-400' },
-    { name: 'Plin', desc: 'Transferencias instantáneas soportadas en bancos locales.', icon: Wallet, tone: 'text-green-400' },
-    { name: 'Transferencia', desc: 'Transferencia estándar a una cuenta de negocio verificada.', icon: Landmark, tone: 'text-blue-400' },
+    { name: 'Binace', desc: `ID: ${binanceNum} — ${binanceName}`, icon: Bitcoin, tone: 'text-orange-400' },
+    { name: 'Yape', desc: `${yapeNum} — ${yapeName}`, icon: Smartphone, tone: 'text-red-400' },
+    { name: 'Plin', desc: `${plinNum} — ${plinName}`, icon: Wallet, tone: 'text-green-400' },
+    { name: 'Transferencia', desc: 'Contacta al soporte para coordinar.', icon: Landmark, tone: 'text-blue-400' },
   ]
 
   return (

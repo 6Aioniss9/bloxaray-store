@@ -45,6 +45,9 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mercadopago')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [submittedOrderId, setSubmittedOrderId] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploaded, setUploaded] = useState(false)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -162,6 +165,7 @@ export default function CheckoutPage() {
         }
 
         clearCart()
+        setSubmittedOrderId(data.orderId)
         setSubmitted(true)
         setLoading(false)
       }
@@ -173,40 +177,51 @@ export default function CheckoutPage() {
 
   if (items.length === 0) return null
 
+  const handleUploadReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !submittedOrderId) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('orderId', submittedOrderId)
+      const res = await fetch('/upload/receipt', { method: 'POST', body: formData })
+      if (res.ok) setUploaded(true)
+    } catch {} finally {
+      setUploading(false)
+    }
+  }
+
   if (submitted) {
     return (
       <main className="min-h-screen bg-[#050510] pt-28 pb-20">
         <div className="mx-auto max-w-lg px-4 text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-            className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-green-500/20"
-          >
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-green-500/20">
             <Check className="size-10 text-green-400" />
           </motion.div>
           <h1 className="text-3xl font-black text-white">Pedido creado</h1>
-          <p className="mt-3 text-zinc-400">
-            Recibiremos tu solicitud y te contactaremos por Discord para confirmar el pago.
-          </p>
-          <p className="mt-2 text-sm text-zinc-500">
-            Si tienes dudas, escribe a nuestro soporte por Discord o usa el chat en vivo.
-          </p>
+          <p className="mt-3 text-zinc-400">Recibiremos tu solicitud y te contactaremos por Discord para confirmar el pago.</p>
+
+          {paymentMethod !== 'mercadopago' && !uploaded && (
+            <div className="mx-auto mt-6 max-w-sm rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 text-left">
+              <p className="mb-2 text-sm font-semibold text-white">Sube tu comprobante de pago</p>
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-red-500/40 bg-red-500/5 p-4 text-sm text-red-400 transition-colors hover:bg-red-500/10">
+                {uploading ? (
+                  <><Loader2 className="size-4 animate-spin" /> Subiendo...</>
+                ) : (
+                  <><Send className="size-4" /> {uploaded ? 'Comprobante subido' : 'Seleccionar imagen'}</>
+                )}
+                <input type="file" accept="image/*" onChange={handleUploadReceipt} className="hidden" disabled={uploading} />
+              </label>
+            </div>
+          )}
+
+          {uploaded && <p className="mt-3 text-sm text-green-400">Comprobante subido correctamente</p>}
+
+          <p className="mt-2 text-sm text-zinc-500">Si tienes dudas, escribe a nuestro soporte por Discord o usa el chat en vivo.</p>
           <div className="mt-8 flex flex-col gap-3">
-            <Link
-              href="/stock"
-              className="rounded-xl bg-red-600 py-3 text-center font-bold text-white transition-colors hover:bg-red-500"
-            >
-              Seguir comprando
-            </Link>
-            <a
-              href="https://discord.gg/aioniss"
-              target="_blank"
-               rel="noreferrer noopener"
-              className="rounded-xl border border-white/10 py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5"
-            >
-              Ir a Discord
-            </a>
+            <Link href="/stock" className="rounded-xl bg-red-600 py-3 text-center font-bold text-white transition-colors hover:bg-red-500">Seguir comprando</Link>
+            <a href="https://discord.gg/aioniss" target="_blank" rel="noreferrer noopener" className="rounded-xl border border-white/10 py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5">Ir a Discord</a>
           </div>
         </div>
       </main>

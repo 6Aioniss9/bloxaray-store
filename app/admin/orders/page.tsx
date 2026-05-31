@@ -49,14 +49,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState('')
   const [paymentFilter, setPaymentFilter] = useState('')
   const [loading, setLoading] = useState(true)
-  const [csrfToken, setCsrfToken] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch('/api/csrf')
-      .then((r) => r.json())
-      .then((d) => setCsrfToken(d.token))
-      .catch(() => {})
-  }, [])
+  const [csrfToken] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     try {
@@ -81,13 +74,10 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (id: string, status: string) => {
     try {
-      await fetch('/api/orders', {
+      await fetch('/api/admin/orders', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
-        },
-        body: JSON.stringify({ id, status }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: id, status }),
       })
       refresh()
     } catch {
@@ -176,7 +166,7 @@ export default function AdminOrdersPage() {
             )
           })}
           <div className="ml-auto flex gap-2">
-            {['', 'mercadopago', 'yape', 'plin'].map((p) => (
+            {['', 'mercadopago', 'yape', 'plin', 'binance'].map((p) => (
               <button
                 key={p}
                 type="button"

@@ -14,8 +14,8 @@ const links = [
   { label: 'FAQ', href: '/faq' },
   { label: 'Terminos', href: '/terminos' },
   { label: 'Privacidad', href: '/privacidad' },
-  { label: 'Reembolsos', href: '#' },
-  { label: 'Envios', href: '#' },
+  { label: 'Reembolsos', href: '/terminos' },
+  { label: 'Envios', href: '/terminos' },
 ]
 
 const socials = [
