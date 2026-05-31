@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { sanitizeInput } from '@/lib/security'
 import { createOrderSchema } from '@/lib/security'
 import { createSafeHandler, createSecureResponse } from '@/lib/api-security'
+import { sendOrderNotification } from '@/lib/discord-webhook'
 
 const validMethods = ['mercadopago', 'yape', 'plin', 'binance']
 
@@ -54,6 +55,8 @@ export const POST = createSafeHandler(async (request: Request) => {
       customerNotes: notes,
     },
   })
+
+  sendOrderNotification(order, 'created')
 
   return createSecureResponse({
     success: true,

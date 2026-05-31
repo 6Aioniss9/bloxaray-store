@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { sanitizeInput } from '@/lib/security'
 import { createPreferenceSchema } from '@/lib/security'
 import { createSafeHandler } from '@/lib/api-security'
+import { sendOrderNotification } from '@/lib/discord-webhook'
 
 function getOrigin(request: Request): string {
   return (
@@ -138,6 +139,8 @@ export const POST = createSafeHandler(async (request: Request) => {
     where: { id: order.id },
     data: { paymentId: result.id },
   })
+
+  sendOrderNotification({ ...order, paymentId: result.id }, 'created')
 
   return NextResponse.json({ url: initPoint, orderId: order.id })
 }, {

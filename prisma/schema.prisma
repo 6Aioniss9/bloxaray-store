@@ -6,6 +6,20 @@ datasource db {
   provider = "sqlite"
 }
 
+model User {
+  id        String   @id @default(cuid())
+  discordId String   @unique
+  name      String
+  email     String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+
+  @@map("users")
+}
+
 model Fruit {
   id        String   @id
   name      String
@@ -22,12 +36,15 @@ model Fruit {
 
 model Order {
   id              String   @id @default(cuid())
+  userId          String?
   items           String   @default("[]")
   total           Float
   totalUSD        Float
   status          String   @default("pending_payment")
   paymentMethod   String?
   paymentId       String?
+  mpPaymentId     String?
+  paidAt          DateTime?
   customerName    String
   customerEmail   String
   customerRoblox  String
@@ -36,6 +53,20 @@ model Order {
   receiptUrl      String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  name      String
+  handle    String   @unique
+  rating    Int
+  text      String
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 model Conversation {

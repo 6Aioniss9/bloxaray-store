@@ -3,6 +3,7 @@ import { payment as mpPayment } from '@/lib/mercadopago'
 import { prisma } from '@/lib/prisma'
 import { WebhookSignatureValidator } from 'mercadopago'
 import { createSafeHandler } from '@/lib/api-security'
+import { sendOrderNotification } from '@/lib/discord-webhook'
 
 function validateSignature(request: Request, topic: string, id: string): boolean {
   const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET
@@ -80,12 +81,13 @@ async function processPayment(paymentId: string) {
     }
   }
 
-  await prisma.order.update({
+  const updated = await prisma.order.update({
     where: { id: order.id },
     data: { status: 'paid', paymentId },
   })
 
   console.log('[Webhook] Order paid successfully:', order.id)
+  sendOrderNotification(updated, 'paid')
 }
 
 export const POST = createSafeHandler(async (request: Request) => {
