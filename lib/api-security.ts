@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { rateLimitIP } from './rate-limit'
 import { expectJson, validateBodySize } from './security'
-import { isProduction } from './env'
 import { requireCsrf } from './csrf'
 
 export type ApiHandler<T = unknown> = (request: Request, params?: T) => Promise<NextResponse>
@@ -58,7 +57,7 @@ export function createSafeHandler(handler: ApiHandler, options: ApiOptions = {})
       return handler(request, params)
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : 'Error desconocido'
-      if (!isProduction()) {
+      if (process.env.NODE_ENV !== 'production') {
         console.error('[API] Error no manejado:', errMsg)
       }
 
