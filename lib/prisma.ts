@@ -7,17 +7,26 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-function getDbUrl(): string {
-  if (process.env.VERCEL) {
-    const tmpDb = '/tmp/dev.db'
-    if (!fs.existsSync(tmpDb)) {
-      const src = path.join(process.cwd(), 'prisma', 'dev.db')
-      if (fs.existsSync(src)) {
+function ensureDbInTemp(): string {
+  const tmpDb = '/tmp/dev.db'
+  if (fs.existsSync(tmpDb)) return `file:${tmpDb}`
+  const candidates = [
+    path.join(process.cwd(), 'prisma', 'dev.db'),
+    path.join(__dirname, '..', 'prisma', 'dev.db'),
+  ]
+  for (const src of candidates) {
+    if (fs.existsSync(src)) {
+      try {
         fs.copyFileSync(src, tmpDb)
-      }
+        return `file:${tmpDb}`
+      } catch { /* continue */ }
     }
-    return `file:${tmpDb}`
   }
+  return `file:${tmpDb}`
+}
+
+function getDbUrl(): string {
+  if (process.env.VERCEL) return ensureDbInTemp()
   return process.env.DATABASE_URL || 'file:./prisma/dev.db'
 }
 
