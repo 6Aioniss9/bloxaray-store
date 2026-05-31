@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { rateLimitIP } from './rate-limit'
-import { expectJson, validateBodySize, MAX_BODY_SIZE } from './security'
-import { getEnv, isProduction } from './env'
-import { getCsrfTokenFromRequest, validateCsrfToken } from './csrf'
+import { expectJson, validateBodySize } from './security'
+import { isProduction } from './env'
+import { requireCsrf } from './csrf'
 
 export type ApiHandler<T = unknown> = (request: Request, params?: T) => Promise<NextResponse>
 
@@ -51,6 +51,11 @@ export function createSafeHandler(handler: ApiHandler, options: ApiOptions = {})
         } catch {
           // body already consumed
         }
+      }
+
+      if (options.requireCsrf && request.method !== 'GET') {
+        const csrfResult = requireCsrf(request)
+        if (csrfResult) return csrfResult
       }
 
       return handler(request, params)

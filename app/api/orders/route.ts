@@ -118,7 +118,7 @@ export const PATCH = createSafeHandler(async (request: Request) => {
   if (body.receiptUrl) updateData.receiptUrl = body.receiptUrl
   if (body.paymentId) updateData.paymentId = body.paymentId
 
-  const order = await prisma.order.update({
+  await prisma.order.update({
     where: { id },
     data: updateData,
   })
@@ -127,4 +127,5 @@ export const PATCH = createSafeHandler(async (request: Request) => {
 }, {
   rateLimit: { maxRequests: 30, windowMs: 60000 },
   maxBodySize: 1024 * 10,
+  requireCsrf: true,
 })

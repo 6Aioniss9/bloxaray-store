@@ -1,6 +1,7 @@
+import { NextResponse } from 'next/server'
+
 const store = new Map<string, { count: number; resetAt: number }>()
 
-// Cleanup stale entries every 5 minutes
 const CLEANUP_INTERVAL = 300_000
 let lastCleanup = Date.now()
 
@@ -40,4 +41,39 @@ export function rateLimitIP(request: Request, maxRequests = 10, windowMs = 60000
 
 export function rateLimitAction(ip: string, action: string, maxRequests = 5, windowMs = 60000) {
   return rateLimit(`action:${ip}:${action}`, maxRequests, windowMs)
+}
+
+function rateLimitResponse(request: Request, limit: number, windowSec: number, prefix: string): NextResponse | null {
+  const result = rateLimitIP(request, limit, windowSec * 1000)
+  if (!result.allowed) {
+    const retryAfter = Math.max(1, Math.ceil((result.resetAt - Date.now()) / 1000))
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes. Intenta de nuevo.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfter),
+          'X-RateLimit-Limit': String(limit),
+          'X-RateLimit-Remaining': '0',
+        },
+      }
+    )
+  }
+  return null
+}
+
+export function checkoutRateLimit(request: Request) {
+  return rateLimitResponse(request, 5, 60, 'checkout')
+}
+
+export function adminRateLimit(request: Request) {
+  return rateLimitResponse(request, 30, 60, 'admin')
+}
+
+export function webhookRateLimit(request: Request) {
+  return rateLimitResponse(request, 100, 60, 'webhook')
+}
+
+export function supportRateLimit(request: Request) {
+  return rateLimitResponse(request, 10, 60, 'support')
 }

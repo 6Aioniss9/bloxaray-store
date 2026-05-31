@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendOrderNotification } from '@/lib/discord-webhook'
+import { webhookRateLimit } from '@/lib/rate-limit'
 
 const MP_WEBHOOK_SECRET = process.env.MERCADO_PAGO_WEBHOOK_SECRET
 const MP_ACCESS_TOKEN = process.env.MERCADO_PAGO_ACCESS_TOKEN
@@ -68,6 +69,9 @@ async function fetchPaymentFromMP(paymentId: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimited = webhookRateLimit(request)
+  if (rateLimited) return rateLimited
+
   try {
     const rawBody = await request.text()
 

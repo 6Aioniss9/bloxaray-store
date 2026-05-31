@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { supportRateLimit } from '@/lib/rate-limit'
 
 export async function GET() {
   try {
@@ -14,6 +15,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const rateLimited = supportRateLimit(request)
+  if (rateLimited) return rateLimited
+
   try {
     const body = await request.json()
     const conv = await prisma.conversation.create({

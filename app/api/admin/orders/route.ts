@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin'
 import { rateLimitIP } from '@/lib/rate-limit'
+import { requireCsrf } from '@/lib/csrf'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -48,6 +49,9 @@ export async function PATCH(request: Request) {
   if (!rl.allowed) {
     return NextResponse.json({ error: 'Demasiadas solicitudes.' }, { status: 429 })
   }
+
+  const csrfResult = requireCsrf(request)
+  if (csrfResult) return csrfResult
 
   const guard = await requireAdmin(request)
   if (guard instanceof NextResponse) return guard

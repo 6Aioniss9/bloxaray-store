@@ -1,4 +1,5 @@
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto'
+import { NextResponse } from 'next/server'
 
 const CSRF_SECRET = process.env.AUTH_SECRET || 'fallback-dev-only'
 
@@ -39,4 +40,17 @@ export function getCsrfTokenFromRequest(request: Request): string | null {
   const cookie = request.headers.get('cookie') || ''
   const match = cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/)
   return match?.[1] || null
+}
+
+export function requireCsrf(request: Request): NextResponse | null {
+  const token = request.headers.get('x-csrf-token')
+  if (!token) {
+    return NextResponse.json({ error: 'CSRF token requerido' }, { status: 403 })
+  }
+
+  if (!validateCsrfToken(token)) {
+    return NextResponse.json({ error: 'CSRF token inválido' }, { status: 403 })
+  }
+
+  return null
 }

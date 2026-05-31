@@ -43,6 +43,14 @@ export default function AdminOrdersPage() {
   const [selected, setSelected] = useState<Order | null>(null)
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/csrf')
+      .then((r) => r.json())
+      .then((d) => setCsrfToken(d.token))
+      .catch(() => {})
+  }, [])
 
   const refresh = useCallback(async () => {
     try {
@@ -69,7 +77,10 @@ export default function AdminOrdersPage() {
     try {
       await fetch('/api/orders', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+        },
         body: JSON.stringify({ id, status }),
       })
       refresh()
