@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { QRCodeSVG } from 'qrcode.react'
-import { CheckCircle, XCircle, Clock, Loader2, Package, ShoppingCart, ShieldCheck, Zap, HeadphonesIcon, Copy, Check, Pointer, Wallet, Upload, MessageCircle, ExternalLink } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, Loader2, Package, ShoppingCart, ShieldCheck, Zap, HeadphonesIcon, Copy, Check, Upload, MessageCircle, ExternalLink } from 'lucide-react'
 import { getManualPaymentInfo } from '@/lib/payment-methods'
 
 type OrderStatus = 'pending_payment' | 'paid' | 'pending_manual_review' | 'delivered' | 'cancelled' | 'refunded'
@@ -34,8 +34,6 @@ type PaymentMethod = {
   color: string
   brand: string
   glow: string
-  border: string
-  bgGlow: string
 }
 
 const statusInfo: Record<OrderStatus, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
@@ -49,13 +47,6 @@ const statusInfo: Record<OrderStatus, { label: string; icon: React.ReactNode; co
 
 const DISCORD_URL = 'https://discord.gg/aioniss'
 
-const howItWorks = [
-  { icon: Pointer, title: 'Elegí', desc: 'Seleccioná el método de pago que prefieras' },
-  { icon: Wallet, title: 'Pagá', desc: 'Transferí el monto exacto a los datos indicados' },
-  { icon: Upload, title: 'Comprobante', desc: 'Subí la captura de confirmación de tu pago' },
-  { icon: Package, title: 'Recibí', desc: 'Te entregamos tu fruta al instante en el juego' },
-]
-
 const paymentMethods: PaymentMethod[] = [
   {
     id: 'binance',
@@ -66,9 +57,7 @@ const paymentMethods: PaymentMethod[] = [
     tags: ['Cripto', 'Seguro', 'Internacional'],
     color: 'text-amber-400',
     brand: '#f59e0b',
-    glow: 'rgba(251,191,36,0.25)',
-    border: 'border-amber-500/30 group-hover:border-amber-400/60',
-    bgGlow: 'from-amber-500/5',
+    glow: 'rgba(251,191,36,0.3)',
   },
   {
     id: 'yape',
@@ -79,9 +68,7 @@ const paymentMethods: PaymentMethod[] = [
     tags: ['Instantáneo', 'Popular', 'Perú'],
     color: 'text-fuchsia-400',
     brand: '#d946ef',
-    glow: 'rgba(217,70,239,0.25)',
-    border: 'border-fuchsia-500/30 group-hover:border-fuchsia-400/60',
-    bgGlow: 'from-fuchsia-500/5',
+    glow: 'rgba(217,70,239,0.3)',
   },
   {
     id: 'plin',
@@ -92,9 +79,7 @@ const paymentMethods: PaymentMethod[] = [
     tags: ['Instantáneo', 'Seguro', 'Perú'],
     color: 'text-cyan-400',
     brand: '#06b6d4',
-    glow: 'rgba(6,182,212,0.25)',
-    border: 'border-cyan-500/30 group-hover:border-cyan-400/60',
-    bgGlow: 'from-cyan-500/5',
+    glow: 'rgba(6,182,212,0.3)',
   },
   {
     id: 'mercadopago',
@@ -105,9 +90,7 @@ const paymentMethods: PaymentMethod[] = [
     tags: ['Digital', 'Seguro', 'Latam'],
     color: 'text-sky-400',
     brand: '#38bdf8',
-    glow: 'rgba(56,189,248,0.25)',
-    border: 'border-sky-500/30 group-hover:border-sky-400/60',
-    bgGlow: 'from-sky-500/5',
+    glow: 'rgba(56,189,248,0.3)',
   },
 ]
 
@@ -196,7 +179,7 @@ function ReceiptUpload({ orderId: initialOrderId }: { orderId?: string }) {
           type="text"
           value={orderId}
           onChange={(e) => setOrderId(e.target.value)}
-          placeholder="ID del pedido (opcional si ya lo tenés)"
+          placeholder="ID del pedido"
           className="h-10 w-full rounded-xl border border-white/[0.08] bg-black/60 px-4 text-sm text-white outline-none transition-all placeholder:text-zinc-600 focus:border-red-500/40"
         />
 
@@ -222,7 +205,7 @@ function ReceiptUpload({ orderId: initialOrderId }: { orderId?: string }) {
   )
 }
 
-function PaymentDetail({ method, onClose }: { method: PaymentMethod; onClose: () => void }) {
+function PaymentDetail({ method, brand }: { method: PaymentMethod; brand: string }) {
   const info = getManualPaymentInfo(method.id as 'yape' | 'plin' | 'binance' | 'mercadopago')
   const qrData = info?.qrData || null
 
@@ -232,22 +215,26 @@ function PaymentDetail({ method, onClose }: { method: PaymentMethod; onClose: ()
         initial={{ opacity: 0, height: 0 }}
         animate={{ opacity: 1, height: 'auto' }}
         exit={{ opacity: 0, height: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="overflow-hidden"
       >
-        <div className="relative mt-5 rounded-2xl border border-white/[0.06] bg-gradient-to-b from-black/50 to-black/20 p-6 backdrop-blur-2xl sm:p-8">
+        <div
+          className="relative mt-6 rounded-2xl border border-white/[0.06] bg-gradient-to-b from-black/60 to-black/20 p-8 backdrop-blur-2xl sm:p-10"
+          style={{ boxShadow: `0 0 80px -30px ${method.glow}` }}
+        >
           <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-20" style={{ background: `radial-gradient(circle at 0% 0%, ${method.glow}, transparent 70%)` }} />
 
-          <div className="relative flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
-            <div className="flex size-20 items-center justify-center rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.08]">
-              <Image src={method.image} alt={method.name} width={80} height={80} className="size-12 object-contain" />
+          <div className="relative flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left">
+            <div className="flex size-24 items-center justify-center rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.08]">
+              <Image src={method.image} alt={method.name} width={100} height={100} className="size-14 object-contain" />
             </div>
-            <div>
-              <h4 className="text-lg font-bold text-white">Mercado Pago</h4>
-              <p className="mt-1 text-sm text-zinc-400">Serás redirigido a la plataforma segura de Mercado Pago para completar el pago con tarjeta, saldo o transferencia.</p>
+            <div className="flex-1">
+              <h4 className="text-2xl font-bold text-white">Mercado Pago</h4>
+              <p className="mt-2 text-base leading-relaxed text-zinc-400">Serás redirigido a la plataforma segura de Mercado Pago para completar el pago con tarjeta, saldo o transferencia.</p>
               <Link
                 href="/checkout"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-sky-500"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-all"
+                style={{ backgroundColor: brand }}
               >
                 Ir a pagar con Mercado Pago
                 <ExternalLink className="size-4" />
@@ -264,66 +251,81 @@ function PaymentDetail({ method, onClose }: { method: PaymentMethod; onClose: ()
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="overflow-hidden"
     >
       <div
-        className="relative mt-5 rounded-2xl border border-white/[0.06] bg-gradient-to-b from-black/50 to-black/20 p-6 backdrop-blur-2xl transition-all sm:p-8"
-        style={{ boxShadow: `0 0 60px -30px ${method.glow}` }}
+        className="relative mt-6 rounded-2xl border border-white/[0.06] bg-gradient-to-b from-black/60 to-black/20 p-8 backdrop-blur-2xl sm:p-10"
+        style={{ boxShadow: `0 0 80px -30px ${method.glow}` }}
       >
-        <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-10" style={{ background: `radial-gradient(circle at 0% 0%, ${method.glow}, transparent 70%)` }} />
-        <div className="absolute left-6 right-6 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-15" style={{ background: `radial-gradient(circle at 0% 0%, ${method.glow}, transparent 70%)` }} />
+        <div className="absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
 
-        <div className="relative grid grid-cols-1 gap-6 lg:grid-cols-5 lg:gap-8">
+        <div className="relative grid grid-cols-1 gap-8 lg:grid-cols-5 lg:gap-10">
           {qrData && (
             <div className="flex flex-col items-center justify-center lg:col-span-2">
-              <div className="rounded-2xl bg-white p-4 shadow-xl" style={{ boxShadow: `0 0 40px -15px ${method.glow}` }}>
-                <QRCodeSVG value={qrData} size={180} bgColor="#ffffff" fgColor="#000000" />
+              <div
+                className="rounded-2xl bg-white p-5 shadow-xl"
+                style={{ boxShadow: `0 0 50px -15px ${method.glow}` }}
+              >
+                <QRCodeSVG value={qrData} size={200} bgColor="#ffffff" fgColor="#000000" />
               </div>
-              <p className="mt-3 text-xs text-zinc-500">Escaneá con tu app {method.name}</p>
+              <p className="mt-4 text-sm font-medium" style={{ color: brand }}>
+                Escaneá con tu app {method.name}
+              </p>
             </div>
           )}
 
           <div className={`flex flex-col justify-center ${qrData ? 'lg:col-span-3' : 'lg:col-span-5'}`}>
-            <div className="flex items-center gap-3">
-              <div className="flex size-14 items-center justify-center rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08]">
-                <Image src={method.image} alt={method.name} width={60} height={60} className="size-8 object-contain" />
+            <div className="flex items-center gap-4">
+              <div className="flex size-16 items-center justify-center rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08]">
+                <Image src={method.image} alt={method.name} width={80} height={80} className="size-10 object-contain" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-white">{method.name}</h4>
-                <p className="text-sm" style={{ color: method.brand }}>{info?.name}</p>
+                <h4 className="text-xl font-bold text-white">{method.name}</h4>
+                <p className="text-sm font-medium" style={{ color: brand }}>{info?.name}</p>
               </div>
             </div>
 
-            <div className="mt-5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">Datos para transferir</p>
-              <p className="text-base font-bold text-white sm:text-lg">{info?.number}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+            <div
+              className="mt-6 rounded-xl border p-5"
+              style={{ borderColor: `${brand}20`, backgroundColor: `${brand}08` }}
+            >
+              <p className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: brand }}>
+                Datos para transferir
+              </p>
+              <p className="text-xl font-black text-white sm:text-2xl">{info?.number}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
                 <CopyButton text={info?.number || ''} label="Copiar número" />
               </div>
             </div>
 
-            <div className="mt-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">Pasos</p>
-              <ul className="space-y-2.5">
+            <div className="mt-6">
+              <p className="mb-4 text-xs font-bold uppercase tracking-widest text-zinc-500">Pasos a seguir</p>
+              <ul className="space-y-3">
                 {info?.instructions.map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold" style={{ backgroundColor: `${method.glow.replace('0.25', '0.15')}`, color: method.brand }}>
+                    <span
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ backgroundColor: `${brand}15`, color: brand }}
+                    >
                       {i + 1}
                     </span>
-                    <span className="pt-0.5 text-sm leading-relaxed text-zinc-300">{step}</span>
+                    <span className="pt-0.5 text-sm leading-relaxed text-zinc-300 sm:text-base">{step}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-3">
-              <ReceiptUpload />
+            <div className="mt-8 flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[260px]">
+                <ReceiptUpload />
+              </div>
               <a
                 href={DISCORD_URL}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-zinc-300 transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-white"
+                className="inline-flex h-fit items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-5 py-2.5 text-sm font-semibold text-zinc-300 transition-all hover:border-indigo-500/30 hover:bg-indigo-500/5 hover:text-white"
               >
                 <MessageCircle className="size-4" />
                 Ayuda por Discord
@@ -357,7 +359,7 @@ function PaymentCard({
       className="group relative h-full text-left"
     >
       <div
-        className="absolute -inset-3 rounded-[24px] opacity-0 blur-2xl transition-all duration-700"
+        className="absolute -inset-4 rounded-[28px] opacity-0 blur-3xl transition-all duration-700"
         style={{
           background: `radial-gradient(ellipse at center, ${method.glow}, transparent 70%)`,
           opacity: isSelected ? 1 : 0,
@@ -365,54 +367,67 @@ function PaymentCard({
       />
 
       <div
-        className={`relative flex h-full flex-col rounded-3xl border bg-gradient-to-b from-[#0c0c1a] to-[#060610] p-8 backdrop-blur-2xl transition-all duration-500 sm:p-10 ${
+        className={`relative flex h-full flex-col items-center rounded-3xl border bg-gradient-to-b from-[#0c0c1a] to-[#060610] p-8 text-center backdrop-blur-2xl transition-all duration-500 sm:p-10 ${
           isSelected
-            ? '-translate-y-1 border-white/[0.18]'
-            : 'border-white/[0.07] group-hover:-translate-y-1 group-hover:border-white/[0.12]'
+            ? '-translate-y-1.5 border-white/[0.18]'
+            : 'border-white/[0.07] group-hover:-translate-y-1.5 group-hover:border-white/[0.14]'
         }`}
         style={{
           boxShadow: isSelected
-            ? `0 25px 80px -20px ${method.glow}, inset 0 0 80px -40px ${method.glow}`
+            ? `0 30px 90px -20px ${method.glow}, inset 0 0 100px -40px ${method.glow}`
             : '0 25px 80px -25px rgba(0,0,0,0.6)',
         }}
       >
         <div className="absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+        <div
+          className="absolute left-0 right-0 top-0 h-1 rounded-t-3xl opacity-0 transition-opacity duration-500"
+          style={{
+            opacity: isSelected ? 1 : 0,
+            background: `linear-gradient(90deg, transparent, ${method.brand}60, transparent)`,
+          }}
+        />
 
-        <div className="relative z-10 flex items-start gap-5 sm:gap-6">
+        <div
+          className="relative flex size-24 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.04] ring-1 transition-all duration-500 sm:size-28"
+          style={{
+            ['--tw-ring-color' as string]: isSelected ? `${method.brand}50` : 'rgba(255,255,255,0.08)',
+          } as React.CSSProperties}
+        >
           <div
-            className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.04] ring-1 transition-all duration-500 sm:size-24"
-            style={{ ['--tw-ring-color' as string]: isSelected ? `${method.brand}40` : 'rgba(255,255,255,0.08)' } as React.CSSProperties}
-          >
-            <div
-              className="absolute inset-0 transition-opacity duration-500"
-              style={{ opacity: isSelected ? 1 : 0, background: `radial-gradient(circle at center, ${method.glow}, transparent)` }}
-            />
-            <Image src={method.image} alt={method.name} width={120} height={120} className="relative size-14 object-contain sm:size-16" />
-          </div>
-          <div className="min-w-0 flex-1 pt-1 sm:pt-2">
-            <h3 className="text-xl font-bold text-white sm:text-2xl">{method.name}</h3>
-            <p className="mt-0.5 text-sm sm:text-base" style={{ color: isSelected ? method.brand : '#71717a' }}>
-              {method.subtitle}
-            </p>
-          </div>
+            className="absolute inset-0 transition-opacity duration-500"
+            style={{
+              opacity: isSelected ? 1 : 0,
+              background: `radial-gradient(circle at center, ${method.glow.replace('0.3', '0.2')}, transparent)`,
+            }}
+          />
+          <Image src={method.image} alt={method.name} width={140} height={140} className="relative size-16 object-contain sm:size-20" />
         </div>
 
-        <div className="relative z-10 my-6 h-px bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-transparent" />
-
-        <p className="relative z-10 text-sm leading-relaxed text-zinc-300 sm:text-base">
-          {method.desc}
+        <h3 className="mt-5 text-2xl font-black text-white sm:text-3xl">{method.name}</h3>
+        <p className="mt-1 text-sm font-medium sm:text-base" style={{ color: isSelected ? method.brand : '#71717a' }}>
+          {method.subtitle}
         </p>
 
-        <div className="relative z-10 mt-auto flex flex-wrap gap-2.5 pt-6">
+        <div
+          className="my-5 h-[3px] w-12 rounded-full transition-all duration-500"
+          style={{
+            backgroundColor: isSelected ? method.brand : 'rgba(255,255,255,0.08)',
+            width: isSelected ? '3rem' : '3rem',
+          }}
+        />
+
+        <p className="text-sm leading-relaxed text-zinc-400 sm:text-base">{method.desc}</p>
+
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
           {method.tags.map((tag) => (
             <span
               key={tag}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-300 sm:text-[11px] ${
-                isSelected
-                  ? 'border-white/[0.15] text-zinc-200'
-                  : 'border-white/[0.06] text-zinc-500 group-hover:border-white/[0.12] group-hover:text-zinc-300'
-              }`}
-              style={{ backgroundColor: isSelected ? `${method.glow.replace('0.25', '0.06')}` : 'rgba(255,255,255,0.03)' }}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-300 sm:text-[11px]"
+              style={{
+                borderColor: isSelected ? `${method.brand}40` : 'rgba(255,255,255,0.06)',
+                backgroundColor: isSelected ? `${method.brand}12` : 'rgba(255,255,255,0.03)',
+                color: isSelected ? method.brand : '#71717a',
+              }}
             >
               <span className="size-1.5 rounded-full" style={{ backgroundColor: method.brand }} />
               {tag}
@@ -420,9 +435,12 @@ function PaymentCard({
           ))}
         </div>
 
-        <div className="relative z-10 mt-4 flex items-center gap-1 text-xs font-medium" style={{ color: method.brand }}>
+        <div
+          className="mt-5 flex items-center gap-1.5 text-xs font-semibold transition-all duration-300"
+          style={{ color: isSelected ? method.brand : 'rgba(255,255,255,0.2)' }}
+        >
           <span>Ver detalles</span>
-          <span className="text-[10px]">→</span>
+          <span className="inline-block text-[10px] transition-transform duration-300 group-hover:translate-x-0.5">→</span>
         </div>
       </div>
     </motion.button>
@@ -440,20 +458,20 @@ function InfoPage() {
 
   return (
     <>
-      <div className="mx-auto mb-14 max-w-4xl text-center">
+      <div className="mx-auto mb-20 max-w-4xl text-center">
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <span className="inline-flex items-center gap-2.5 rounded-full border border-red-500/20 bg-red-500/[0.07] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-red-400 shadow-[0_0_24px_-8px_rgba(239,35,60,0.3)] backdrop-blur-sm">
-            <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_8px_2px_rgba(239,35,60,0.5)]" />
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-red-500/20 bg-red-500/[0.07] px-5 py-2 text-xs font-bold uppercase tracking-[0.22em] text-red-400 shadow-[0_0_30px_-8px_rgba(239,35,60,0.3)] backdrop-blur-sm">
+            <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_10px_3px_rgba(239,35,60,0.6)]" />
             Métodos de Pago
           </span>
         </motion.div>
 
         <motion.h1
-          className="mt-6 font-black uppercase leading-[1.05] tracking-tight"
+          className="mt-7 font-black uppercase leading-[1.05] tracking-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          style={{ fontFamily: 'var(--font-heading), sans-serif', fontSize: 'clamp(2.2rem, 6vw, 4.5rem)' }}
+          style={{ fontFamily: 'var(--font-heading), sans-serif', fontSize: 'clamp(2.5rem, 7vw, 5.5rem)' }}
         >
           Cómo{' '}
           <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">
@@ -462,40 +480,16 @@ function InfoPage() {
         </motion.h1>
 
         <motion.p
-          className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg"
+          className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-zinc-400 sm:text-lg"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Todos nuestros métodos de pago son seguros y verificados. Elegí el que más te guste y seguí los pasos.
+          Todos nuestros métodos de pago son seguros y verificados. Elegí el que más te guste.
         </motion.p>
       </div>
 
-      <motion.div
-        className="mx-auto mb-16 max-w-4xl"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-          {howItWorks.map((step, i) => (
-            <div key={step.title} className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.04] bg-white/[0.02] px-4 py-5 text-center sm:px-6 sm:py-6">
-              <div className="flex size-10 items-center justify-center rounded-xl bg-red-500/10 ring-1 ring-red-500/20">
-                <step.icon className="size-5 text-red-400" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white">
-                  <span className="text-red-400">{i + 1}.</span> {step.title}
-                </p>
-                <p className="mt-1 text-xs leading-relaxed text-zinc-500">{step.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-7">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-7">
         {paymentMethods.map((m, i) => (
           <PaymentCard
             key={m.id}
@@ -512,51 +506,56 @@ function InfoPage() {
           <PaymentDetail
             key={selected.id}
             method={selected}
-            onClose={() => setSelectedMethod(null)}
+            brand={selected.brand}
           />
         )}
       </AnimatePresence>
 
       <motion.div
-        className="mx-auto mt-24 max-w-5xl"
+        className="mx-auto mt-24 max-w-6xl"
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <div className="relative rounded-3xl border border-white/[0.06] bg-gradient-to-b from-black/50 to-black/20 p-8 backdrop-blur-2xl sm:p-10 lg:p-12">
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-b from-black/60 to-black/20 p-8 backdrop-blur-2xl sm:p-12 lg:p-14">
           <div
-            className="pointer-events-none absolute inset-0 rounded-3xl opacity-30"
-            style={{ background: 'linear-gradient(135deg, rgba(239,35,60,0.08) 0%, transparent 50%, rgba(239,35,60,0.03) 100%)' }}
+            className="pointer-events-none absolute inset-0 opacity-40"
+            style={{
+              background:
+                'radial-gradient(ellipse at 20% 50%, rgba(239,35,60,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(239,35,60,0.04) 0%, transparent 60%)',
+            }}
           />
+          <div className="absolute left-10 right-10 top-0 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
 
-          <div className="absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
-
-          <p className="relative text-center text-base leading-relaxed text-zinc-400 sm:text-lg">
+          <p className="relative mx-auto max-w-2xl text-center text-base leading-relaxed text-zinc-400 sm:text-lg">
             Todos los pagos se coordinan de forma segura y con atención directa.{' '}
             <span className="font-medium text-zinc-200">Si tenés dudas, contactanos por Discord.</span>
           </p>
 
-          <div className="relative mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
+          <div className="relative mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3 sm:gap-8">
             {trustItems.map((item) => (
-              <div key={item.label} className="group flex flex-col items-center gap-4 rounded-2xl border border-white/[0.04] bg-white/[0.02] px-6 py-6 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.04] sm:px-8 sm:py-8">
-                <div className="flex size-14 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 transition-all duration-300 group-hover:bg-red-500/15 group-hover:ring-red-500/30">
-                  <item.icon className="size-7 text-red-400" />
+              <div
+                key={item.label}
+                className="group flex flex-col items-center gap-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-6 py-8 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.04] sm:py-10"
+              >
+                <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500/15 to-red-500/5 ring-1 ring-red-500/20 transition-all duration-300 group-hover:from-red-500/20 group-hover:to-red-500/8 group-hover:ring-red-500/30">
+                  <item.icon className="size-8 text-red-400" />
                 </div>
                 <div className="text-center">
-                  <p className="text-base font-bold text-white sm:text-lg">{item.label}</p>
-                  <p className="mt-1 text-sm text-zinc-500">{item.desc}</p>
+                  <p className="text-lg font-bold text-white">{item.label}</p>
+                  <p className="mt-1.5 text-sm text-zinc-500">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="relative mt-8 flex justify-center">
+          <div className="relative mt-10 flex justify-center">
             <a
               href={DISCORD_URL}
               target="_blank"
               rel="noreferrer noopener"
-              className="inline-flex items-center gap-2.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] px-6 py-3 text-sm font-bold text-indigo-300 shadow-[0_0_24px_-8px_rgba(99,102,241,0.2)] transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.1] hover:text-indigo-200"
+              className="inline-flex items-center gap-2.5 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] px-7 py-3.5 text-sm font-bold text-indigo-300 shadow-[0_0_30px_-8px_rgba(99,102,241,0.25)] transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.1] hover:text-indigo-200"
             >
               <MessageCircle className="size-5" />
               Contactar por Discord
@@ -627,7 +626,7 @@ function SuccessView({ order }: { order: OrderData }) {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-500/20 bg-indigo-500/[0.07] py-3 text-sm font-bold text-indigo-300 transition-colors hover:bg-indigo-500/[0.12]"
             >
               <MessageCircle className="size-4" />
- Consultar en Discord
+              Consultar en Discord
             </a>
           </>
         )}
@@ -739,12 +738,15 @@ export default function PagosPage() {
     <main className="relative min-h-screen pt-24 pb-20">
       <div className="pointer-events-none fixed inset-0 -z-20">
         <div className="absolute inset-0 bg-[#050510]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-red-950/10 via-transparent to-red-950/10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-red-950/15 via-transparent to-red-950/10" />
         <div className="pointer-events-none absolute left-1/4 top-1/4 -z-10 -translate-x-1/2">
-          <div className="size-[600px] rounded-full blur-3xl sm:size-[800px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.06) 0%, transparent 70%)' }} />
+          <div className="size-[700px] rounded-full blur-3xl sm:size-[900px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.07) 0%, transparent 70%)' }} />
         </div>
-        <div className="pointer-events-none absolute right-1/4 top-3/4 -z-10 translate-x-1/2">
-          <div className="size-[400px] rounded-full blur-3xl sm:size-[600px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.04) 0%, transparent 70%)' }} />
+        <div className="pointer-events-none absolute right-1/4 top-2/3 -z-10 translate-x-1/2">
+          <div className="size-[500px] rounded-full blur-3xl sm:size-[700px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.05) 0%, transparent 70%)' }} />
+        </div>
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
+          <div className="size-[300px] rounded-full blur-3xl sm:size-[400px]" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.02) 0%, transparent 70%)' }} />
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
