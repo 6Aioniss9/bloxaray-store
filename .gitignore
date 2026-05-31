@@ -15,7 +15,6 @@ public/uploads/receipts/*
 !public/uploads/receipts/.gitkeep
 
 # Database
-prisma/dev.db
 prisma/dev.db-journal
 
 # Common ignores
