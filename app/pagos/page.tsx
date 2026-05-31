@@ -30,6 +30,7 @@ type PaymentMethod = {
   image: string
   tags: string[]
   color: string
+  brand: string
   glow: string
   border: string
   bgGlow: string
@@ -109,7 +110,8 @@ const paymentMethods: PaymentMethod[] = [
     image: '/payments/binance.png',
     tags: ['Cripto', 'Seguro', 'Internacional'],
     color: 'text-amber-400',
-    glow: 'rgba(251,191,36,0.2)',
+    brand: '#f59e0b',
+    glow: 'rgba(251,191,36,0.25)',
     border: 'border-amber-500/30 group-hover:border-amber-400/60',
     bgGlow: 'from-amber-500/5',
   },
@@ -121,7 +123,8 @@ const paymentMethods: PaymentMethod[] = [
     image: '/payments/yape.png',
     tags: ['Instantáneo', 'Popular', 'Perú'],
     color: 'text-fuchsia-400',
-    glow: 'rgba(217,70,239,0.2)',
+    brand: '#d946ef',
+    glow: 'rgba(217,70,239,0.25)',
     border: 'border-fuchsia-500/30 group-hover:border-fuchsia-400/60',
     bgGlow: 'from-fuchsia-500/5',
   },
@@ -133,7 +136,8 @@ const paymentMethods: PaymentMethod[] = [
     image: '/payments/plin.png',
     tags: ['Instantáneo', 'Seguro', 'Perú'],
     color: 'text-cyan-400',
-    glow: 'rgba(6,182,212,0.2)',
+    brand: '#06b6d4',
+    glow: 'rgba(6,182,212,0.25)',
     border: 'border-cyan-500/30 group-hover:border-cyan-400/60',
     bgGlow: 'from-cyan-500/5',
   },
@@ -145,7 +149,8 @@ const paymentMethods: PaymentMethod[] = [
     image: '/payments/mercado_pago.png',
     tags: ['Digital', 'Seguro', 'Latam'],
     color: 'text-sky-400',
-    glow: 'rgba(56,189,248,0.2)',
+    brand: '#38bdf8',
+    glow: 'rgba(56,189,248,0.25)',
     border: 'border-sky-500/30 group-hover:border-sky-400/60',
     bgGlow: 'from-sky-500/5',
   },
@@ -160,40 +165,55 @@ const trustItems = [
 function PaymentCard({ method, index }: { method: PaymentMethod; index: number }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative"
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.7, delay: index * 0.12, ease: [0.22, 1, 0.36, 1] }}
+      className="group relative h-full"
     >
-      <div className={`absolute -inset-[1px] rounded-2xl bg-gradient-to-b ${method.bgGlow} via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100`} />
       <div
-        className="relative flex h-full flex-col rounded-2xl border border-white/[0.06] bg-black/50 p-6 backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-white/[0.12] sm:p-7"
-        style={{ boxShadow: '0 8px 32px -12px rgba(0,0,0,0.5)' }}
+        className="absolute -inset-3 rounded-[24px] opacity-0 blur-2xl transition-all duration-700 group-hover:opacity-100"
+        style={{ background: `radial-gradient(ellipse at center, ${method.glow}, transparent 70%)` }}
+      />
+
+      <div
+        className="relative flex h-full flex-col rounded-3xl border border-white/[0.07] bg-gradient-to-b from-[#0c0c1a] to-[#060610] p-8 backdrop-blur-2xl transition-all duration-500 group-hover:-translate-y-2 group-hover:border-white/[0.15] sm:p-10"
+        style={{ boxShadow: '0 25px 80px -25px rgba(0,0,0,0.6)' }}
       >
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-          style={{ boxShadow: `inset 0 0 60px -20px ${method.glow}` }}
+          className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+          style={{ boxShadow: `inset 0 0 100px -30px ${method.glow}` }}
         />
 
-        <div className="relative z-10 flex items-start gap-4">
-          <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/[0.04] ring-1 ring-white/[0.08] transition-all duration-300 group-hover:ring-white/[0.15] sm:size-18">
-            <Image src={method.image} alt={method.name} width={80} height={80} className="size-10 object-contain sm:size-12" />
+        <div className="absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+
+        <div className="relative z-10 flex items-start gap-5 sm:gap-6">
+          <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/[0.04] ring-1 ring-white/[0.08] transition-all duration-500 group-hover:scale-105 group-hover:ring-white/[0.2] sm:size-24">
+            <div
+              className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              style={{ background: `radial-gradient(circle at center, ${method.glow}, transparent)` }}
+            />
+            <Image src={method.image} alt={method.name} width={120} height={120} className="relative size-14 object-contain sm:size-16" />
           </div>
-          <div className="min-w-0 flex-1 pt-1">
-            <h3 className="text-lg font-bold text-white sm:text-xl">{method.name}</h3>
-            <p className="mt-0.5 text-sm text-zinc-400">{method.subtitle}</p>
+          <div className="min-w-0 flex-1 pt-1 sm:pt-2">
+            <h3 className="text-xl font-bold text-white sm:text-2xl">{method.name}</h3>
+            <p className="mt-0.5 text-sm text-zinc-500 sm:text-base">{method.subtitle}</p>
           </div>
         </div>
 
-        <p className="relative z-10 mt-4 text-sm leading-relaxed text-zinc-300">{method.desc}</p>
+        <div className="relative z-10 my-6 h-px bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-transparent" />
 
-        <div className="relative z-10 mt-auto flex flex-wrap gap-2 pt-5">
+        <p className="relative z-10 text-sm leading-relaxed text-zinc-300 sm:text-base">
+          {method.desc}
+        </p>
+
+        <div className="relative z-10 mt-auto flex flex-wrap gap-2.5 pt-6">
           {method.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 transition-colors duration-300 group-hover:border-white/[0.12] group-hover:text-zinc-300"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500 transition-all duration-300 group-hover:border-white/[0.12] group-hover:text-zinc-300 sm:text-[11px]"
             >
+              <span className="size-1.5 rounded-full" style={{ backgroundColor: method.brand }} />
               {tag}
             </span>
           ))}
@@ -213,26 +233,29 @@ function InfoPage() {
 
   return (
     <>
-      <div className="mx-auto mb-14 max-w-2xl text-center">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <span className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/8 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-red-400 shadow-[0_0_16px_-8px_rgba(239,35,60,0.25)] backdrop-blur-sm">
-            <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_6px_2px_rgba(239,35,60,0.4)]" />
+      <div className="mx-auto mb-20 max-w-4xl text-center">
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <span className="inline-flex items-center gap-2.5 rounded-full border border-red-500/20 bg-red-500/[0.07] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-red-400 shadow-[0_0_24px_-8px_rgba(239,35,60,0.3)] backdrop-blur-sm">
+            <span className="size-1.5 rounded-full bg-red-500 shadow-[0_0_8px_2px_rgba(239,35,60,0.5)]" />
             Métodos de Pago
           </span>
         </motion.div>
 
         <motion.h1
-          className="mt-4 font-black uppercase leading-[1.1]"
-          style={{ fontFamily: 'var(--font-heading), sans-serif', textShadow: '0 4px 40px rgba(0,0,0,0.5)', fontSize: 'clamp(1.8rem, 5vw, 3.5rem)', letterSpacing: '0.02em' }}
+          className="mt-6 font-black uppercase leading-[1.05] tracking-tight"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+          style={{ fontFamily: 'var(--font-heading), sans-serif', fontSize: 'clamp(2.2rem, 6vw, 4.5rem)' }}
         >
-          Cómo <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">Pagar</span>
+          Cómo{' '}
+          <span className="bg-gradient-to-r from-red-400 via-red-500 to-orange-400 bg-clip-text text-transparent">
+            Pagar
+          </span>
         </motion.h1>
 
         <motion.p
-          className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base"
+          className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -241,31 +264,41 @@ function InfoPage() {
         </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-7">
         {paymentMethods.map((m, i) => (
           <PaymentCard key={m.id} method={m} index={i} />
         ))}
       </div>
 
       <motion.div
-        className="mx-auto mt-16 max-w-3xl"
-        initial={{ opacity: 0, y: 20 }}
+        className="mx-auto mt-24 max-w-5xl"
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6 }}
       >
-        <div className="rounded-2xl border border-white/[0.05] bg-black/30 px-6 py-8 backdrop-blur-sm sm:px-10 sm:py-10">
-          <p className="text-center text-sm leading-relaxed text-zinc-400 sm:text-base">
+        <div className="relative rounded-3xl border border-white/[0.06] bg-gradient-to-b from-black/50 to-black/20 p-8 backdrop-blur-2xl sm:p-10 lg:p-12">
+          <div
+            className="pointer-events-none absolute inset-0 rounded-3xl opacity-30"
+            style={{ background: 'linear-gradient(135deg, rgba(239,35,60,0.08) 0%, transparent 50%, rgba(239,35,60,0.03) 100%)' }}
+          />
+
+          <div className="absolute left-8 right-8 top-0 h-px bg-gradient-to-r from-transparent via-red-500/20 to-transparent" />
+
+          <p className="relative text-center text-base leading-relaxed text-zinc-400 sm:text-lg">
             Todos los pagos se coordinan de forma segura y con atención directa.{' '}
-            <span className="text-zinc-300">Si tenés dudas, contactanos por Discord.</span>
+            <span className="font-medium text-zinc-200">Si tenés dudas, contactanos por Discord.</span>
           </p>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+          <div className="relative mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-6">
             {trustItems.map((item) => (
-              <div key={item.label} className="flex items-center gap-3 rounded-xl border border-white/[0.04] bg-white/[0.02] px-4 py-3">
-                <item.icon className="size-5 shrink-0 text-red-400" />
-                <div>
-                  <p className="text-sm font-semibold text-white">{item.label}</p>
-                  <p className="text-xs text-zinc-500">{item.desc}</p>
+              <div key={item.label} className="group flex flex-col items-center gap-4 rounded-2xl border border-white/[0.04] bg-white/[0.02] px-6 py-6 transition-all duration-300 hover:border-white/[0.1] hover:bg-white/[0.04] sm:px-8 sm:py-8">
+                <div className="flex size-14 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 transition-all duration-300 group-hover:bg-red-500/15 group-hover:ring-red-500/30">
+                  <item.icon className="size-7 text-red-400" />
+                </div>
+                <div className="text-center">
+                  <p className="text-base font-bold text-white sm:text-lg">{item.label}</p>
+                  <p className="mt-1 text-sm text-zinc-500">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -380,8 +413,11 @@ export default function PagosPage() {
       <div className="pointer-events-none fixed inset-0 -z-20">
         <div className="absolute inset-0 bg-[#050510]" />
         <div className="absolute inset-0 bg-gradient-to-b from-red-950/10 via-transparent to-red-950/10" />
-        <div className="pointer-events-none absolute left-1/2 top-1/4 -z-10 -translate-x-1/2">
+        <div className="pointer-events-none absolute left-1/4 top-1/4 -z-10 -translate-x-1/2">
           <div className="size-[600px] rounded-full blur-3xl sm:size-[800px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.06) 0%, transparent 70%)' }} />
+        </div>
+        <div className="pointer-events-none absolute right-1/4 top-3/4 -z-10 translate-x-1/2">
+          <div className="size-[400px] rounded-full blur-3xl sm:size-[600px]" style={{ background: 'radial-gradient(circle, rgba(239,35,60,0.04) 0%, transparent 70%)' }} />
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
