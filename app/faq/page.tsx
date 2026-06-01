@@ -14,24 +14,52 @@ const faqs = [
     a: 'Estas comprando frutas fisicas de Blox Fruits: el item real dentro del juego, entregado a tu inventario mediante un intercambio seguro. No es un script ni nada que arriesgue tu cuenta.',
   },
   {
-    q: 'Que tan rapida es la entrega?',
-    a: 'La mayoria de pedidos se entregan en menos de 5 minutos despues de confirmar el pago. En horas pico puede tomar un poco mas, pero nuestro equipo te mantiene informado todo el tiempo.',
-  },
-  {
     q: 'Como recibo mi fruta?',
-    a: 'Despues de comprar a traves de Discord, nuestro staff coordinara un intercambio seguro dentro del juego. Te guiamos en cada paso para que la entrega sea sencilla.',
+    a: 'Despues de confirmar el pago, nuestro staff te contacta por Discord y coordina un intercambio seguro dentro del juego. Te agregamos al server de Blox Fruits y hacemos el trade. No necesitas hacer nada complejo.',
   },
   {
-    q: 'Es seguro para mi cuenta?',
-    a: 'Si. Solo usamos metodos de intercambio legitimos dentro del juego. Nunca pedimos tu contrasena ni usamos nada que pueda poner en riesgo tu cuenta.',
+    q: 'Que tan rapida es la entrega?',
+    a: 'La mayoria de pedidos se entregan en menos de 5 minutos despues de confirmar el pago. En horas pico puede tomar un poco mas, pero nuestro equipo te mantiene informado todo el tiempo por Discord.',
+  },
+  {
+    q: 'Es seguro para mi cuenta de Roblox?',
+    a: 'Totalmente. Solo usamos metodos de intercambio legitimos dentro del juego. Nunca pedimos tu contrasena, no usamos scripts ni exploits. Tu cuenta esta 100% segura.',
   },
   {
     q: 'Que metodos de pago aceptan?',
-    a: 'Aceptamos Binance (USDT), Yape, Plin y transferencia bancaria. Todos los pagos se procesan a traves de canales seguros y verificados.',
+    a: 'Aceptamos Mercado Pago (tarjeta, saldo, transferencia), Yape, Plin y Binance (USDT). Todos los pagos se procesan a traves de canales seguros y verificados. Elegi el que te sea mas comodo.',
   },
   {
-    q: 'Que pasa si mi fruta se agota?',
-    a: 'Nuestro stock se actualiza diariamente y se muestra en vivo en la pagina. Si algo se agota despues de tu pedido, lo reabastecemos rapido o te reembolsamos el total, tu eliges.',
+    q: 'Como pago con Yape o Plin?',
+    a: 'Selecciona Yape o Plin en el checkout, ahi veras nuestro numero y un codigo QR para escanear. Envia el monto exacto, captura la pantalla y sube el comprobante. En minutos confirmamos tu pago.',
+  },
+  {
+    q: 'Como pago con Binance?',
+    a: 'Selecciona Binance en el checkout. Te mostramos nuestro ID de Binance Pay. Envia el monto exacto en USDT, captura el comprobante y subelo en la pagina. La transferencia es inmediata.',
+  },
+  {
+    q: 'Que pasa si la fruta que compre se agoto?',
+    a: 'Nuestro stock se actualiza en vivo. Si compras una fruta y se agota antes de entregarla, te reabastecemos en el menor tiempo posible o te reembolsamos el total, tu decides.',
+  },
+  {
+    q: 'Puedo cancelar mi pedido?',
+    a: 'Si el pago fue realizado pero la fruta todavia no se entrego, podes cancelar y solicitar reembolso total por Discord. Una vez entregada la fruta en el juego, no se aceptan cancelaciones.',
+  },
+  {
+    q: 'Tienen garantia?',
+    a: 'Si. Si por algun motivo no recibis tu fruta o hay un problema con la entrega, te reembolsamos o te entregamos otra fruta de igual valor. Todo esta respaldado por nuestra atencion directa.',
+  },
+  {
+    q: 'Donde puedo ver mi pedido?',
+    a: 'Despues de comprar, vas a recibir un enlace de seguimiento. Tambien podes consultar el estado de tu pedido en cualquier momento contactando a nuestro soporte por Discord.',
+  },
+  {
+    q: 'Hacen envios a otros juegos?',
+    a: 'No, solo trabajamos con Blox Fruits en Roblox. Si en el futuro expandimos a otros juegos, lo anunciaremos en nuestro Discord.',
+  },
+  {
+    q: 'Tienen descuentos por cantidad?',
+    a: 'Si haces pedidos multiples, contactanos por Discord y te hacemos un precio especial. Tambien tenemos promociones frecuentes que anunciamos en nuestro servidor.',
   },
 ]
 

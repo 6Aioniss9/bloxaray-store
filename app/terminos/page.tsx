@@ -21,7 +21,7 @@ const sections = [
   {
     title: '3. Proceso de Compra',
     content:
-      'Para realizar una compra, el usuario debe seleccionar una fruta disponible en stock, completar el pago a traves de nuestro sistema de pago (Stripe) o metodos alternativos (Binance, Yape, Plin, Transferencia). Una vez confirmado el pago, nuestro equipo coordina la entrega del item dentro del juego mediante un intercambio seguro.',
+      'Para realizar una compra, el usuario debe seleccionar una fruta disponible en stock, completar el pago a traves de Mercado Pago o metodos alternativos (Binance, Yape, Plin). Una vez confirmado el pago, nuestro equipo coordina la entrega del item dentro del juego mediante un intercambio seguro.',
   },
   {
     title: '4. Precios y Pagos',
@@ -61,7 +61,7 @@ const sections = [
   {
     title: '11. Contacto',
     content:
-      'Para cualquier consulta sobre estos terminos, puedes contactarnos a traves de nuestro Discord oficial o enviando un correo a soporte@bloxaray.store.',
+      'Para cualquier consulta sobre estos terminos, puedes contactarnos a traves de nuestro Discord oficial: discord.gg/aioniss.',
   },
 ]
 
