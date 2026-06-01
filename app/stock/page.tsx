@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, PackageSearch } from 'lucide-react'
+import { Search, PackageSearch, DollarSign } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { type Fruit, type Rarity } from '@/lib/fruits'
 import { FruitCard } from '@/components/site/fruit-card'
+import { getCurrency, setCurrency, subscribe, type Currency } from '@/lib/currency-store'
 
 type Filter = 'Todas' | Rarity
 const filters: Filter[] = ['Todas', 'Common', 'Uncommon', 'Rare', 'Legendary', 'Mythical']
@@ -24,6 +25,12 @@ export default function StockPage() {
   const [query, setQuery] = useState('')
   const [active, setActive] = useState<Filter>('Todas')
   const [loading, setLoading] = useState(true)
+  const [currency, setCurr] = useState<Currency>('PEN')
+
+  useEffect(() => {
+    setCurr(getCurrency())
+    return subscribe(() => setCurr(getCurrency()))
+  }, [])
 
   useEffect(() => {
     fetch('/api/fruits')
@@ -89,8 +96,20 @@ export default function StockPage() {
                       aria-label="Buscar frutas"
                     />
                     {query && (
-                      <button onClick={() => setQuery('')} className="mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white/8 text-[11px] text-zinc-500 transition-colors hover:bg-white/15 hover:text-zinc-300">✕</button>
+                      <button onClick={() => setQuery('')} className="mr-1 flex size-6 shrink-0 items-center justify-center rounded-full bg-white/8 text-[11px] text-zinc-500 transition-colors hover:bg-white/15 hover:text-zinc-300">✕</button>
                     )}
+                    <button
+                      onClick={() => setCurrency(currency === 'PEN' ? 'USD' : 'PEN')}
+                      className="flex size-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all"
+                      style={{
+                        borderColor: currency === 'USD' ? 'rgba(59,130,246,0.4)' : 'rgba(239,35,60,0.3)',
+                        backgroundColor: currency === 'USD' ? 'rgba(59,130,246,0.1)' : 'rgba(239,35,60,0.1)',
+                        color: currency === 'USD' ? '#60a5fa' : '#f87171',
+                      }}
+                      title={currency === 'PEN' ? 'Cambiar a USD' : 'Cambiar a Soles'}
+                    >
+                      {currency === 'PEN' ? 'S/' : '$'}
+                    </button>
                   </div>
                 </div>
 

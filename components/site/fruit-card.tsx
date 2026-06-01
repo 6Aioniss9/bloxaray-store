@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getRarityStyle, type Fruit } from '@/lib/fruits'
+import { getRarityStyle, type Fruit, type Rarity } from '@/lib/fruits'
 import { TiltCard } from '@/components/effects/tilt-card'
+import { getCurrency, subscribe, type Currency } from '@/lib/currency-store'
 
 const RARITY_BG: Record<string, string> = {
   Mythical:  'from-red-950/60 via-red-900/20 to-transparent',
@@ -53,11 +54,16 @@ function Particles({ id }: { id: string }) {
 }
 
 export function FruitCard({ fruit, index = 0 }: { fruit: Fruit; index?: number }) {
-  const rarity = getRarityStyle(fruit.rarity)
+  const [currency, setCurr] = useState<Currency>('PEN')
+  useEffect(() => {
+    setCurr(getCurrency())
+    return subscribe(() => setCurr(getCurrency()))
+  }, [])
+  const rarity = getRarityStyle(fruit.rarity as Rarity)
   const inStock = fruit.stock > 0
-  const ambient = AMBIENT_GLOW[fruit.id] || AMBIENT_GLOW.kitsune
-  const rarityBg = RARITY_BG[fruit.rarity] || RARITY_BG.Mythical
   const glowColor = rarity.glow
+  const rarityBg = RARITY_BG[fruit.rarity] || RARITY_BG.Common
+  const ambient = AMBIENT_GLOW[fruit.id] || 'from-cyan-500/15 via-blue-600/8 to-transparent'
 
   return (
     <motion.div
@@ -120,10 +126,10 @@ export function FruitCard({ fruit, index = 0 }: { fruit: Fruit; index?: number }
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-2xl font-extrabold text-white">
-                  S/{fruit.price.toFixed(2)}
+                  {currency === 'USD' ? `$${fruit.priceUSD.toFixed(2)}` : `S/${fruit.price.toFixed(2)}`}
                 </p>
                 <p className="text-[11px] text-zinc-500">
-                  ${fruit.priceUSD.toFixed(2)} USD
+                  {currency === 'USD' ? `S/${fruit.price.toFixed(2)} PEN` : `$${fruit.priceUSD.toFixed(2)} USD`}
                 </p>
               </div>
               <Link

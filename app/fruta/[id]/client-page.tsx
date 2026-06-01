@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,6 +9,7 @@ import { Minus, Plus, ShoppingCart, Zap, ArrowLeft, Check, Package } from 'lucid
 import { getRarityStyle, type Fruit, type Rarity } from '@/lib/fruits'
 import { addToCart } from '@/lib/cart-store'
 import { Button } from '@/components/ui/button'
+import { getCurrency, setCurrency, subscribe, type Currency } from '@/lib/currency-store'
 
 const RARITY_BG: Record<string, string> = {
   Mythical:  'from-red-950/60 via-red-900/20 to-transparent',
@@ -66,6 +67,12 @@ export function FruitDetailClient({ fruit }: { fruit: Fruit }) {
   const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
+  const [currency, setCurr] = useState<Currency>('PEN')
+
+  useEffect(() => {
+    setCurr(getCurrency())
+    return subscribe(() => setCurr(getCurrency()))
+  }, [])
 
   const rarity = getRarityStyle(fruit.rarity as Rarity)
   const inStock = fruit.stock > 0
@@ -117,8 +124,15 @@ export function FruitDetailClient({ fruit }: { fruit: Fruit }) {
             <p className="text-lg leading-relaxed text-zinc-300">{fruit.blurb}</p>
 
             <div className="flex items-baseline gap-4">
-              <p className="text-5xl font-black text-white">S/{fruit.price.toFixed(2)}</p>
-              <p className="text-lg text-zinc-500">${fruit.priceUSD.toFixed(2)} USD</p>
+              <p className="text-5xl font-black text-white">
+                {currency === 'USD' ? `$${fruit.priceUSD.toFixed(2)}` : `S/${fruit.price.toFixed(2)}`}
+              </p>
+              <button
+                onClick={() => setCurrency(currency === 'PEN' ? 'USD' : 'PEN')}
+                className="text-lg text-zinc-500 transition-colors hover:text-zinc-300"
+              >
+                {currency === 'USD' ? `S/${fruit.price.toFixed(2)}` : `$${fruit.priceUSD.toFixed(2)}`}
+              </button>
             </div>
 
             <div className="flex items-center gap-2">
@@ -142,7 +156,12 @@ export function FruitDetailClient({ fruit }: { fruit: Fruit }) {
 
             <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
               <p className="text-sm text-zinc-400">Subtotal</p>
-              <p className="text-2xl font-black text-white">S/{(fruit.price * quantity).toFixed(2)}<span className="ml-2 text-sm font-normal text-zinc-500">(${(fruit.priceUSD * quantity).toFixed(2)} USD)</span></p>
+              <p className="text-2xl font-black text-white">
+                {currency === 'USD' ? `$${(fruit.priceUSD * quantity).toFixed(2)}` : `S/{(fruit.price * quantity).toFixed(2)}`}
+                <span className="ml-2 text-sm font-normal text-zinc-500">
+                  {currency === 'USD' ? `S/{(fruit.price * quantity).toFixed(2)}` : `$${(fruit.priceUSD * quantity).toFixed(2)}`}
+                </span>
+              </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">

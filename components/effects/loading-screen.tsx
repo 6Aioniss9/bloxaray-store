@@ -19,7 +19,13 @@ export function LoadingScreen() {
         setTimeout(() => setLoading(false), 400)
       }
     }, 20)
-    return () => clearInterval(id)
+
+    const safety = setTimeout(() => setLoading(false), 5000)
+
+    return () => {
+      clearInterval(id)
+      clearTimeout(safety)
+    }
   }, [])
 
   return (
@@ -30,7 +36,6 @@ export function LoadingScreen() {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Particles */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {Array.from({ length: 12 }, (_, i) => (
               <motion.div
@@ -56,7 +61,6 @@ export function LoadingScreen() {
             ))}
           </div>
 
-          {/* Logo */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -77,7 +81,6 @@ export function LoadingScreen() {
             />
           </motion.div>
 
-          {/* Progress bar */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -105,7 +108,6 @@ export function LoadingScreen() {
             </p>
           </motion.div>
 
-          {/* Loading text */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

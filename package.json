@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "seed": "tsx prisma/seed.ts",
+    "test": "tsx scripts/test-fruits.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
