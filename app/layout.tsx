@@ -50,6 +50,35 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 }
 
+const jsonLdWebSite = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'BLOXARAY',
+  url: 'https://bloxaray.com/',
+  description:
+    'Tu marketplace confiable para frutas físicas de Blox Fruits. Stock actualizado diariamente, entrega rápida y atención personalizada.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://bloxaray.com/stock?q={search_term_string}',
+    },
+    'query-input': 'required name=search_term_string',
+  },
+}
+
+const jsonLdOrganization = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'BLOXARAY',
+  url: 'https://bloxaray.com/',
+  logo: 'https://bloxaray.com/logo.png',
+  sameAs: [
+    'https://discord.gg/aioniss',
+    'https://tiktok.com/@aioniss',
+  ],
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -58,6 +87,8 @@ export default function RootLayout({
   return (
     <html lang="es" className={`dark ${inter.variable} ${montserrat.variable} ${geistMono.variable}`}>
       <body className="bg-background font-sans antialiased">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebSite) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }} />
         <SessionProvider>
           <LoadingScreen />
           <AmbientBackground />
