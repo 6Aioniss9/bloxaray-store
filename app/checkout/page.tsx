@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submittedOrderId, setSubmittedOrderId] = useState('')
+  const [submittedToken, setSubmittedToken] = useState('')
   const [uploading, setUploading] = useState(false)
   const [uploaded, setUploaded] = useState(false)
   const [error, setError] = useState('')
@@ -166,6 +167,7 @@ export default function CheckoutPage() {
 
         clearCart()
         setSubmittedOrderId(data.orderId)
+        setSubmittedToken(data.trackingToken || '')
         setSubmitted(true)
         setLoading(false)
       }
@@ -220,6 +222,11 @@ export default function CheckoutPage() {
 
           <p className="mt-2 text-sm text-zinc-500">Si tienes dudas, escribe a nuestro soporte por Discord o usa el chat en vivo.</p>
           <div className="mt-8 flex flex-col gap-3">
+            {submittedToken && (
+              <Link href={`/tracking`} className="rounded-xl border border-red-500/30 bg-red-600/10 py-3 text-center text-sm font-bold text-red-400 transition-colors hover:bg-red-600/20">
+                Rastrear mi pedido
+              </Link>
+            )}
             <Link href="/stock" className="rounded-xl bg-red-600 py-3 text-center font-bold text-white transition-colors hover:bg-red-500">Seguir comprando</Link>
             <a href="https://discord.gg/aioniss" target="_blank" rel="noreferrer noopener" className="rounded-xl border border-white/10 py-3 text-center text-sm font-medium text-zinc-400 transition-colors hover:bg-white/5">Ir a Discord</a>
           </div>

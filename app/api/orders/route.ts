@@ -89,6 +89,7 @@ export async function POST(request: Request) {
     return createSecureResponse({
       success: true,
       orderId: order.id,
+      trackingToken: order.trackingToken,
       message: 'Pedido creado. Te contactaremos por Discord para confirmar.',
     })
   } catch (error) {
@@ -164,7 +165,7 @@ export async function PATCH(request: Request) {
 
     if (!id) return NextResponse.json({ error: 'ID requerido' }, { status: 400 })
 
-    const validStates = ['pending_payment', 'paid', 'pending_manual_review', 'delivered', 'cancelled', 'refunded']
+    const validStates = ['pending_payment', 'paid', 'pending_manual_review', 'preparing_delivery', 'delivered', 'cancelled', 'refunded']
     if (status && !validStates.includes(status)) {
       return NextResponse.json({ error: 'Estado inválido' }, { status: 400 })
     }
